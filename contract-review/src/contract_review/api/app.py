@@ -133,7 +133,7 @@ def create_app(storage: ObjectStorage | ContractReviewWorkflow | None = None, oc
     app.add_middleware(
         CORSMiddleware,
         allow_origins=cors_origins,
-        allow_credentials=auth_enabled,
+        allow_credentials=True,
         allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["*"],
     )
