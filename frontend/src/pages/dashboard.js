@@ -19,7 +19,7 @@ export async function renderDashboard(el) {
     el.innerHTML = `
       <div class="space-y-6">
         <!-- KPI4 -->
-        <div class="grid grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
           ${kpis.map(k => `
             <div class="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-[0_2px_8px_#0F172A0A]">
               <div class="text-[11px] tracking-[0.8px] font-semibold text-[#94A3B8]">${k.label}</div>
@@ -38,8 +38,8 @@ export async function renderDashboard(el) {
           <button id="dashAgentAll" class="bg-white text-[#4F46E5] px-4 py-2.5 rounded-xl text-sm font-semibold shadow">一键 Agent 闭环</button>
         </div>
         <!-- 待审队列 + 风险聚类 -->
-        <div class="grid grid-cols-3 gap-4">
-          <div class="col-span-2 bg-white rounded-2xl border border-[#E2E8F0] shadow-sm">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div class="lg:col-span-2 bg-white rounded-2xl border border-[#E2E8F0] shadow-sm">
             <div class="px-5 py-4 border-b border-[#E2E8F0] flex items-center justify-between">
               <div><div class="font-semibold text-[#0F172A]">待审队列</div><div class="text-xs text-[#94A3B8]">按业务编号去重 · 点击进入深度工作台</div></div>
               <button class="text-xs px-3 py-1.5 rounded-lg border border-[#E2E8F0] hover:bg-[#F8FAFC]" id="refreshPending">刷新</button>

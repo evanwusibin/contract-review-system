@@ -15,10 +15,10 @@ body{margin:0;color:var(--ink);font:14px/1.55 -apple-system,BlinkMacSystemFont,"
 button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 .svg-icon{width:16px;height:16px;display:inline-block;vertical-align:-3px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
-/* ── 布局骨架 ── */
-.app{height:100vh;display:grid;grid-template-columns:220px 1fr}
+/* ── 布局骨架（已由 Tailwind 接管，保留兼容） ── */
+.app{height:100vh;display:block;overflow:hidden}
 .main{min-width:0;height:100vh;overflow:hidden;display:flex;flex-direction:column}
-.topbar{height:64px;flex:none;background:rgba(255,255,255,.7);border-bottom:1px solid rgba(226,232,240,.8);display:flex;align-items:center;padding:0 30px;gap:18px}
+.topbar{height:56px;flex:none;background:#FFFFFF;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;padding:0 24px;gap:18px}
 .crumb{color:var(--sub);font-size:12px}
 .crumb b{color:var(--ink)}
 .top-actions{margin-left:auto;display:flex;align-items:center;gap:16px;color:var(--sub);font-size:12px}

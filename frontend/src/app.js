@@ -48,11 +48,11 @@ function renderApp(rootEl, page) {
   const main = document.createElement('main')
   main.className = 'flex-1 flex flex-col min-w-0'
   const topbar = document.createElement('header')
-  topbar.className = 'h-[56px] bg-white border-b border-[#E2E8F0] flex items-center px-6 justify-between'
-  topbar.innerHTML = `<div class="text-sm text-[#64748B]">衡信 · 合同智能评审 <span class="mx-2">/</span><b class="text-[#0F172A]">${CRUMB[page] || ''}</b></div><div class="text-xs text-[#94A3B8]">ENTERPRISE AI REVIEW</div>`
+  topbar.className = 'h-[56px] bg-white border-b border-[#E2E8F0] flex items-center px-6 justify-between shrink-0'
+  topbar.innerHTML = `<div class="text-sm text-[#64748B]">合同智能评审 <span class="mx-2">/</span><b class="text-[#0F172A]">${CRUMB[page] || ''}</b></div><div class="text-xs text-[#94A3B8] hidden sm:block">ENTERPRISE</div>`
   main.appendChild(topbar)
   const content = document.createElement('section')
-  content.className = 'flex-1 p-6 overflow-auto'
+  content.className = 'flex-1 p-6 overflow-auto bg-[#F8FAFC] min-w-0'
   content.id = 'page-content'
   main.appendChild(content)
   wrap.appendChild(main)
@@ -63,9 +63,9 @@ function renderApp(rootEl, page) {
 }
 
 const NAV_ITEMS = [
-  { page: 'dashboard', icon: 'icon-home', label: '指挥中心' },
-  { page: 'workbench', icon: 'icon-file', label: '深度工作台' },
-  { page: 'governance', icon: 'icon-shield', label: '知识与治理' }
+  { page: 'dashboard', icon: 'icon-dashboard', label: '指挥中心' },
+  { page: 'workbench', icon: 'icon-workbench', label: '深度工作台' },
+  { page: 'governance', icon: 'icon-governance', label: '知识与治理' }
 ]
 
 function createSidebar(activePage) {
@@ -76,9 +76,14 @@ function createSidebar(activePage) {
   const avatarLetter = (user?.name || '法')[0]
   aside.innerHTML = `
     <div class="h-[72px] flex items-center px-[18px] border-b border-[#E2E8F0]">
-      <div>
-        <div class="text-[15px] font-extrabold tracking-[-0.5px] text-[#0F172A]">衡信 · 合同智能评审</div>
-        <div class="text-[7px] font-semibold tracking-[0.8px] text-[#64748B]">ENTERPRISE AI REVIEW PLATFORM</div>
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-[#4F46E5] flex items-center justify-center text-white">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M10 13H8"/><path d="M16 17H8"/><path d="M13 13h3"/></svg>
+        </div>
+        <div>
+          <div class="text-[15px] font-extrabold tracking-[-0.5px] text-[#0F172A] leading-none">合同智能评审</div>
+          <div class="text-[10px] text-[#94A3B8] leading-none mt-1">AI Review</div>
+        </div>
       </div>
     </div>
     <div class="flex-1 p-3 space-y-4">

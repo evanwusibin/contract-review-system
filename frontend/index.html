@@ -15,15 +15,20 @@
 </head>
 <body>
 <svg aria-hidden="true" width="0" height="0" style="position:absolute">
-  <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></symbol>
-  <symbol id="icon-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"></path><path d="M9 21v-6h6v6"></path></symbol>
-  <symbol id="icon-inbox" viewBox="0 0 24 24"><path d="M4 4h16l1 11H3z"></path><path d="M3 15h5l2 3h4l2-3h5"></path></symbol>
-  <symbol id="icon-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v5h5"></path><path d="M12 7v5l3 2"></path></symbol>
-  <symbol id="icon-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></symbol>
-  <symbol id="icon-rules" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"></path><circle cx="8" cy="5" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle><circle cx="10" cy="19" r="1.5"></circle></symbol>
-  <symbol id="icon-logout" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3"></path><path d="M21 3v18"></path></symbol>
-  <symbol id="icon-spark" viewBox="0 0 24 24"><path d="m12 2 1.5 7.5L21 12l-7.5 1.5L12 21l-1.5-7.5L3 12l7.5-2.5z"></path></symbol>
-  <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></symbol>
+  <!-- 保留旧版可用的简洁描边，补 enterprise 细节：沿用上一版 1.8 线宽 + 原型 lucide 质感 -->
+  <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></symbol>
+  <symbol id="icon-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></symbol>
+  <symbol id="icon-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16l1 11H3z"></path><path d="M3 15h5l2 3h4l2-3h5"></path></symbol>
+  <symbol id="icon-history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v5h5"></path><path d="M12 7v5l3 2"></path></symbol>
+  <symbol id="icon-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 13h6"></path><path d="M9 17h6"></path></symbol>
+  <symbol id="icon-rules" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h16"></path><circle cx="8" cy="6" r="1.5" fill="currentColor" stroke="none"></circle><circle cx="15" cy="12" r="1.5" fill="currentColor" stroke="none"></circle><circle cx="10" cy="18" r="1.5" fill="currentColor" stroke="none"></circle></symbol>
+  <symbol id="icon-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 17l5-5-5-5M15 12H3"></path><path d="M21 3v18"></path></symbol>
+  <symbol id="icon-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m12 2 1.5 7.5L21 12l-7.5 1.5L12 21l-1.5-7.5L3 12l7.5-2.5z"></path></symbol>
+  <symbol id="icon-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></symbol>
+  <!-- Element Plus 风格补充：更细腻的线性图标，保留旧 ID 兼容 -->
+  <symbol id="icon-dashboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="9" rx="1.2"></rect><rect x="14" y="3" width="7" height="5" rx="1.2"></rect><rect x="14" y="12" width="7" height="9" rx="1.2"></rect><rect x="3" y="16" width="7" height="5" rx="1.2"></rect></symbol>
+  <symbol id="icon-workbench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 13h6"></path><path d="M9 17h6"></path></symbol>
+  <symbol id="icon-governance" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 8v8"></path><path d="M8 12h8"></path></symbol>
 </svg>
 <div id="app" class="app"></div>
 <script type="module" src="/src/main.js"></script>
