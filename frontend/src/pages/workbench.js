@@ -57,6 +57,11 @@ async function loadWorkbench(el, taskId) {
         ${renderSource(docName, task, parse, attachments)}
         ${renderReview(task, review, version, parse)}
       </div>
+      <div id="wbInsights" style="display:grid;gap:12px;margin-top:12px">
+        <div id="wbFlowDag"></div>
+        <div id="wbRiskMatrix"></div>
+        <div id="wbEvidenceGraph"></div>
+      </div>
       <div id="wbTrajectory" class="card" style="margin-top:12px;display:none"><div class="card-head"><h2>Agent 轨迹</h2><span class="subtle">工具调用链路可观测</span></div><div class="review-body" id="wbTrajectoryBody"></div></div>
       <div class="footer-note">原型数据为脱敏示例，仅用于确认交互和业务流程，不代表正式评审结论。</div>`
 
@@ -82,6 +87,18 @@ async function loadWorkbench(el, taskId) {
     if (retryBtn) retryBtn.addEventListener('click', async () => {
       try { await api.retryTask(taskId); showToast('已重试，进入 parsing'); loadWorkbench(el, taskId) } catch (e) { showToast(e.message) }
     })
+
+    // 业务深化：证据图谱 / 风险矩阵 / 审批流图
+    try {
+      const [{ renderFlowDag }, { renderRiskMatrix }, { renderEvidenceGraph }] = await Promise.all([
+        import('../components/insights/flow-dag.js'),
+        import('../components/insights/risk-matrix.js'),
+        import('../components/insights/evidence-graph.js')
+      ])
+      renderFlowDag(document.getElementById('wbFlowDag'), taskId)
+      renderRiskMatrix(document.getElementById('wbRiskMatrix'), taskId)
+      renderEvidenceGraph(document.getElementById('wbEvidenceGraph'), taskId)
+    } catch { /* insights 失败不阻塞主流程 */ }
   } catch (err) {
     el.innerHTML = `<div class="empty-state">加载失败：${err.message}</div>`
   }

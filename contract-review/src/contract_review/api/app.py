@@ -470,6 +470,88 @@ def create_app(storage: ObjectStorage | ContractReviewWorkflow | None = None, oc
 
     # ── Review Detail API（评审工作台数据源）────────────────────
 
+    # ── Insights APIs — 让项目更饱满（证据图谱/风险矩阵/审批流）──
+    @app.get("/v1/tasks/{task_id}/evidence-graph")
+    async def evidence_graph(task_id: UUID) -> dict[str, object]:
+        task = store.get_task(task_id)
+        if task is None:
+            raise HTTPException(status_code=404, detail=_error("TASK_NOT_FOUND", "任务不存在"))
+        parse = store.get_parse_for_task(task_id)
+        if parse is None:
+            return _response("req_evidence_graph", {"nodes": [], "edges": [], "empty_reason": "尚未解析"})
+        payload = getattr(parse, "extracted_payload", {}) or {}
+        hits = store.list_rule_hits(parse.id)
+        nodes: list[dict] = []
+        edges: list[dict] = []
+        for key, field in payload.items():
+            fid = f"field:{key}"
+            nodes.append({"id": fid, "type": "field", "label": key, "status": getattr(field, "status", "unknown"), "value": getattr(field, "value", None), "evidence": getattr(getattr(field, "evidence", None), "snippet", None)})
+            for h in hits:
+                evidence_text = getattr(h, "evidence_text", "") or ""
+                snippet = getattr(getattr(field, "evidence", None), "snippet", "") or ""
+                if snippet and snippet[:8] in evidence_text or key in getattr(h, "message", ""):
+                    hid = f"hit:{h.id}"
+                    if not any(n["id"] == hid for n in nodes):
+                        nodes.append({"id": hid, "type": "hit", "label": getattr(h, "message", str(h.id))[:24], "severity": getattr(h, "severity", "low")})
+                    edges.append({"from": fid, "to": hid, "label": "supports"})
+        for h in hits:
+            hid = f"hit:{h.id}"
+            if not any(n["id"] == hid for n in nodes):
+                nodes.append({"id": hid, "type": "hit", "label": getattr(h, "message", str(h.id))[:24], "severity": getattr(h, "severity", "low")})
+        return _response("req_evidence_graph", {"task_id": str(task_id), "nodes": nodes, "edges": edges, "total_fields": len(payload), "total_hits": len(hits)})
+
+    @app.get("/v1/tasks/{task_id}/risk-matrix")
+    async def risk_matrix(task_id: UUID) -> dict[str, object]:
+        task = store.get_task(task_id)
+        if task is None:
+            raise HTTPException(status_code=404, detail=_error("TASK_NOT_FOUND", "任务不存在"))
+        parse = store.get_parse_for_task(task_id)
+        hits = store.list_rule_hits(parse.id) if parse else []
+        # 维度：severity x rule_code
+        matrix: dict = {"high": [], "medium": [], "low": []}
+        for h in hits:
+            sev = getattr(h, "severity", "low")
+            if sev not in matrix:
+                sev = "low"
+            matrix[sev].append({"rule_id": str(getattr(h, "rule_id", "")), "message": getattr(h, "message", ""), "suggested_action": getattr(h, "suggested_action", None), "evidence_position": getattr(h, "evidence_position", None)})
+        total = len(hits)
+        level = "low"
+        if matrix["high"]:
+            level = "high"
+        elif matrix["medium"]:
+            level = "medium"
+        return _response("req_risk_matrix", {"task_id": str(task_id), "overall_risk_level": level, "matrix": matrix, "total": total, "counts": {k: len(v) for k, v in matrix.items()}})
+
+    @app.get("/v1/tasks/{task_id}/flow")
+    async def approval_flow(task_id: UUID) -> dict[str, object]:
+        task = store.get_task(task_id)
+        if task is None:
+            raise HTTPException(status_code=404, detail=_error("TASK_NOT_FOUND", "任务不存在"))
+        logs = [jsonable_encoder(asdict(l)) for l in store.list_logs_for_task(task_id)]
+        # 规范流：pending -> parsing -> reviewing -> done / blocked
+        flow_nodes = [
+            {"key": "pending", "label": "待处理", "status": "done"},
+            {"key": "parsing", "label": "解析中", "status": "pending"},
+            {"key": "reviewing", "label": "评审中", "status": "pending"},
+            {"key": "done", "label": "已完成", "status": "pending"},
+        ]
+        cur = getattr(task.status, "to_spec", lambda: task.status.value)() if hasattr(task.status, "to_spec") else task.status.value
+        order = ["pending", "parsing", "reviewing", "done", "blocked"]
+        try:
+            cur_idx = order.index(cur)
+        except ValueError:
+            cur_idx = 0
+        for i, n in enumerate(flow_nodes):
+            if cur == "blocked":
+                n["status"] = "blocked" if i == len(flow_nodes) - 1 else "done"
+            elif i < cur_idx:
+                n["status"] = "done"
+            elif i == cur_idx:
+                n["status"] = "current"
+        if cur == "blocked":
+            flow_nodes.append({"key": "blocked", "label": "阻塞", "status": "blocked", "reason": task.blocked_reason})
+        return _response("req_flow", {"task_id": str(task_id), "current_status": cur, "write_status": getattr(task, "write_status", "not_written").value if hasattr(getattr(task, "write_status", ""), "value") else str(getattr(task, "write_status", "not_written")), "flow": flow_nodes, "logs": logs[:20]})
+
     @app.get("/v1/tasks/{task_id}/review")
     async def get_task_review(task_id: UUID) -> dict[str, object]:
         task = store.get_task(task_id)
