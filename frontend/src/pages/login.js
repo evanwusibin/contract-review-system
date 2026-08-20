@@ -60,7 +60,23 @@ export function renderLogin(rootEl) {
     submitBtn.textContent = '登录中…'
     try {
       const { api } = await import('../api.js')
-      const resp = await api.login(name, password)
+      let resp
+      try {
+        resp = await api.login(name, password)
+      } catch (e) {
+        // 演示态：后端未启用鉴权时直接放行
+        if (String(e.message).includes('认证未启用') || String(e.message).includes('AUTH_DISABLED')) {
+          resp = { ok: true, data: { user: { id: 'demo', username: name || 'demo', display_name: name || '演示用户', role: 'admin' } } }
+        } else throw e
+      }
+      if (resp.error?.code === 'AUTH_DISABLED' || resp.error?.message?.includes('认证未启用')) {
+        enrichUser({ id: 'demo', username: name || 'demo', display_name: name || '演示用户', role: 'admin', roleName: '演示用户', name: name || '演示' })
+        msgEl.textContent = '演示模式：已直接进入工作台（后端鉴权未启用）'
+        msgEl.className = 'login-message success'
+        showToast('演示登录成功', 'success')
+        setTimeout(() => import('../app.js').then(({ mount }) => mount(document.getElementById('app'))), 250)
+        return
+      }
       if (!resp.ok || !resp.data?.user) {
         throw new Error(resp.error?.message || '登录失败')
       }
