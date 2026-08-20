@@ -3,17 +3,35 @@ import { renderLogin } from './pages/login.js'
 import { renderDashboard } from './pages/dashboard.js'
 import { renderWorkbench } from './pages/workbench.js'
 import { renderGovernance } from './pages/governance.js'
+import { renderTasks } from './pages/tasks.js'
+import { renderDocuments } from './pages/documents.js'
+import { renderVersions } from './pages/versions.js'
+import { renderRules } from './pages/rules.js'
+import { renderAudit } from './pages/audit.js'
+import { renderWelcome } from './pages/welcome.js'
 
 const PAGES = {
   dashboard: renderDashboard,
+  tasks: renderTasks,
+  documents: renderDocuments,
   workbench: (el) => renderWorkbench(el, currentTaskId),
-  governance: renderGovernance
+  versions: renderVersions,
+  rules: renderRules,
+  audit: renderAudit,
+  governance: renderGovernance,
+  welcome: renderWelcome
 }
 
 const CRUMB = {
   dashboard: '智能评审指挥中心',
+  tasks: '待审任务',
+  documents: '合同评审文档',
   workbench: 'AI 深度评审工作台',
-  governance: 'AI 知识与治理中心'
+  versions: '合同版本',
+  rules: '规则中心',
+  audit: '审计记录',
+  governance: 'AI 知识与治理中心',
+  welcome: '欢迎'
 }
 
 let currentTaskId = null
@@ -64,7 +82,12 @@ function renderApp(rootEl, page) {
 
 const NAV_ITEMS = [
   { page: 'dashboard', icon: 'icon-dashboard', label: '指挥中心' },
+  { page: 'tasks', icon: 'icon-inbox', label: '待审任务' },
+  { page: 'documents', icon: 'icon-file', label: '合同文档' },
   { page: 'workbench', icon: 'icon-workbench', label: '深度工作台' },
+  { page: 'versions', icon: 'icon-history', label: '合同版本' },
+  { page: 'rules', icon: 'icon-rules', label: '规则中心' },
+  { page: 'audit', icon: 'icon-shield', label: '审计记录' },
   { page: 'governance', icon: 'icon-governance', label: '知识与治理' }
 ]
 
