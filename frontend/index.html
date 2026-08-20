@@ -3,9 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>合同评审工作台</title>
+<title>合同评审工作台 — 企业级AI平台</title>
 <link rel="icon" href="data:,">
+<script>tailwind = { config: { corePlugins: { preflight: false } } };</script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Noto+Sans+SC:wght@100..900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/src/styles.css">
+<style>body{margin:0;background:#F8FAFC;font-family:'Inter','Noto Sans SC',system-ui,sans-serif}</style>
 </head>
 <body>
 <svg aria-hidden="true" width="0" height="0" style="position:absolute">
@@ -13,12 +19,10 @@
   <symbol id="icon-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"></path><path d="M9 21v-6h6v6"></path></symbol>
   <symbol id="icon-inbox" viewBox="0 0 24 24"><path d="M4 4h16l1 11H3z"></path><path d="M3 15h5l2 3h4l2-3h5"></path></symbol>
   <symbol id="icon-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v5h5"></path><path d="M12 7v5l3 2"></path></symbol>
-  <symbol id="icon-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"></circle><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"></path><path d="M16 5.5a3 3 0 0 1 0 5.8M18 14c1.8.8 3 2.5 3 4.5"></path></symbol>
   <symbol id="icon-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></symbol>
   <symbol id="icon-rules" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"></path><circle cx="8" cy="5" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle><circle cx="10" cy="19" r="1.5"></circle></symbol>
   <symbol id="icon-logout" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3"></path><path d="M21 3v18"></path></symbol>
   <symbol id="icon-spark" viewBox="0 0 24 24"><path d="m12 2 1.5 7.5L21 12l-7.5 1.5L12 21l-1.5-7.5L3 12l7.5-2.5z"></path></symbol>
-  <symbol id="icon-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14-4L4 9"></path><path d="M4 4v5h5"></path><path d="M4 13a8 8 0 0 0 14 4l2-2"></path><path d="M20 20v-5h-5"></path></symbol>
   <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></symbol>
 </svg>
 <div id="app" class="app"></div>
