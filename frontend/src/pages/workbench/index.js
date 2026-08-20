@@ -24,8 +24,51 @@ export function renderWorkbench(el, taskId) {
 }
 
 async function loadWorkbench(el, taskId) {
+  // 兼容：dashboard 传入的是 approval_code (CTR-...)，而 tasks 传入的是 UUID
+  let resolvedId = taskId
+  let isMockApproval = false
+  let mockApproval = null
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(taskId))
+  if (!isUuid) {
+    try {
+      const list = await api.listTasks()
+      const found = (list.data?.items || []).find(t => t.external_task_key === taskId || t.approval_code === taskId || t.id === taskId)
+      if (found) resolvedId = found.id
+      else {
+        // 尝试 mock 审批
+        try { mockApproval = (await api.getApproval(taskId)).data } catch {}
+        if (mockApproval) isMockApproval = true
+      }
+    } catch {}
+  }
+  // 若为纯 mock 且无真实任务，直接展示 mock 工作台并引导 Agent
+  if (isMockApproval && mockApproval) {
+    el.innerHTML = `
+      <div class="heading">
+        <div>
+          <h1>${mockApproval.approval_title || mockApproval.title}</h1>
+          <p>${mockApproval.approval_code} · 申请人：${mockApproval.applicant_name} · <span class="pill blue">待处理</span> <span class="pill gray">未回写</span></p>
+          <p style="font-size:11px;color:#6b7280;margin-top:4px">该审批来自模拟审批系统，尚未创建真实评审任务</p>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="wbMockAgent"><svg class="svg-icon" aria-hidden="true"><use href="#icon-spark"></use></svg> 一键 Agent 闭环</button>
+          <button class="btn" id="wbBack">返回</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl border border-[#E2E8F0] p-8 text-center">
+        <div class="text-sm font-semibold text-[#0F172A]">尚未解析</div>
+        <div class="text-xs text-[#64748B] mt-1">点击“一键 Agent 闭环”将自动完成：详情 → 附件下载 → 解析 → 规则 → 保存 → 回写</div>
+        <div class="text-xs text-[#94A3B8] mt-3">附件：${(mockApproval.attachments||[]).map(a=>a.file_name).join('、') || '无（演示阻塞）'}</div>
+      </div>`
+    document.getElementById('wbBack')?.addEventListener('click', () => document.querySelector('button[data-page="dashboard"]')?.click())
+    document.getElementById('wbMockAgent')?.addEventListener('click', async () => {
+      const btn = document.getElementById('wbMockAgent'); btn.textContent='执行中…'; btn.disabled=true
+      try { const r = await api.agentRun(taskId); showToast(`Agent 完成：${r.data.final_status}`); loadWorkbench(el, taskId) } catch (e) { const msg = e.message || e.detail || JSON.stringify(e).slice(0,120); showToast(msg) ; btn.textContent='一键 Agent 闭环'; btn.disabled=false }
+    })
+    return
+  }
   try {
-    const resp = await api.getTaskReview(taskId)
+    const resp = await api.getTaskReview(resolvedId)
     const { task, attachments, latest_version: version, review, parse } = resp.data || {}
 
     const docName = attachments?.[0]?.file_name || task?.title || '合同文档'
@@ -75,17 +118,17 @@ async function loadWorkbench(el, taskId) {
     if (agentBtn) agentBtn.addEventListener('click', async () => {
       agentBtn.textContent = '执行中…'; agentBtn.disabled = true
       try {
-        const r = await api.agentRun(task.external_task_key || taskId)
+        const r = await api.agentRun(task.external_task_key || resolvedId)
         const d = r.data
         showToast(`Agent 完成：${d.final_status} 风险 ${d.overall_risk_level || '-'}`)
         document.getElementById('wbTrajectory').style.display = 'block'
         document.getElementById('wbTrajectoryBody').innerHTML = (d.trajectory || []).map(s => `<div style="padding:6px 0;border-bottom:1px solid #f0f0f0"><b>${s.step}</b> · ${s.tool} · <span class="pill ${s.status === 'success' ? 'green' : s.status === 'blocked' ? 'red' : 'gray'}">${s.status}</span><div style="font-size:11px;color:#6b7280">${s.thought}</div></div>`).join('')
         setTimeout(() => loadWorkbench(el, taskId), 800)
-      } catch (e) { showToast(e.message) } finally { agentBtn.disabled = false; agentBtn.innerHTML = '<svg class="svg-icon" aria-hidden="true"><use href="#icon-spark"></use></svg> Agent 闭环' }
+      } catch (e) { const m = e?.message || e?.detail || JSON.stringify(e).slice(0,200); showToast(m) } finally { agentBtn.disabled = false; agentBtn.innerHTML = '<svg class="svg-icon" aria-hidden="true"><use href="#icon-spark"></use></svg> Agent 闭环' }
     })
     const retryBtn = document.getElementById('wbRetry')
     if (retryBtn) retryBtn.addEventListener('click', async () => {
-      try { await api.retryTask(taskId); showToast('已重试，进入 parsing'); loadWorkbench(el, taskId) } catch (e) { showToast(e.message) }
+      try { await api.retryTask(resolvedId); showToast('已重试，进入 parsing'); loadWorkbench(el, taskId) } catch (e) { const m = e?.message || e?.detail || JSON.stringify(e).slice(0,200); showToast(m) }
     })
 
     // 业务深化：证据图谱 / 风险矩阵 / 审批流图
@@ -95,12 +138,13 @@ async function loadWorkbench(el, taskId) {
         import('../../components/insights/risk-matrix.js'),
         import('../../components/insights/evidence-graph.js')
       ])
-      renderFlowDag(document.getElementById('wbFlowDag'), taskId)
-      renderRiskMatrix(document.getElementById('wbRiskMatrix'), taskId)
-      renderEvidenceGraph(document.getElementById('wbEvidenceGraph'), taskId)
+      renderFlowDag(document.getElementById('wbFlowDag'), resolvedId)
+      renderRiskMatrix(document.getElementById('wbRiskMatrix'), resolvedId)
+      renderEvidenceGraph(document.getElementById('wbEvidenceGraph'), resolvedId)
     } catch { /* insights 失败不阻塞主流程 */ }
   } catch (err) {
-    el.innerHTML = `<div class="empty-state">加载失败：${err.message}</div>`
+    const msg = err?.message || err?.detail || (typeof err === 'string' ? err : JSON.stringify(err).slice(0,300))
+    el.innerHTML = `<div class="empty-state">加载失败：${msg}</div>`
   }
 }
 
