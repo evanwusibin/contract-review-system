@@ -102,6 +102,10 @@ docker compose -f docker-compose.prod.yml --env-file .env.production up -d --bui
 
 详见 `contract-review/docs/api/CONTRACT_REVIEW_API_V1.md`
 
+## 复习指南
+
+完整项目复习见 [复习指南.md](复习指南.md)（架构六层/状态机/18 API/Docker/前端关键点/面试高频问答）
+
 ## 许可证
 
 MIT — 见 [LICENSE](LICENSE)
