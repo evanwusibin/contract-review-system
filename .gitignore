@@ -1,0 +1,51 @@
+# ===== 环境与密钥（绝不入库） =====
+.env
+.env.*
+*.pem
+*.key
+
+# ===== 数据库 / 数据文件 =====
+*.db
+*.sqlite
+*.sqlite3
+data/uploads/
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ===== Node =====
+node_modules/
+dist/
+build/
+
+# ===== IDE / 系统 =====
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ===== 临时 / 敏感证据 =====
+.scratch/
+evidence/*.log
+evidence/**/*.log
+*.log
+*.err
+cookies.txt
+pipes.txt
+docker_err.txt
+docker_out.txt
+
+# ===== 生产环境（含真实密码） =====
+.env.production
+.env.staging
+
+# ===== Playwright =====
+.playwright-mcp/

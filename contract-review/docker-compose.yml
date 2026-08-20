@@ -1,0 +1,80 @@
+services:
+  minio:
+    image: minio/minio:latest
+    container_name: contract-review-minio
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  unlimited-ocr:
+    image: ${UNLIMITED_OCR_IMAGE:-vllm/vllm-openai:unlimited-ocr}
+    container_name: contract-review-unlimited-ocr
+    restart: unless-stopped
+    ipc: host
+    shm_size: "16gb"
+    environment:
+      HF_HOME: /root/.cache/huggingface
+      HF_TOKEN: ${HF_TOKEN:-}
+    command:
+      - serve
+      - baidu/Unlimited-OCR
+      - --trust-remote-code
+      - --served-model-name
+      - Unlimited-OCR
+      - --host
+      - 0.0.0.0
+      - --port
+      - "10000"
+      - --max-model-len
+      - "32768"
+    ports:
+      - "10000:10000"
+    volumes:
+      - hf-cache:/root/.cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  backend:
+    build:
+      context: .
+    container_name: contract-review-backend
+    restart: unless-stopped
+    environment:
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-contract-review}
+      MINIO_SECURE: "false"
+      UNLIMITED_OCR_ENDPOINT: http://unlimited-ocr:10000
+      UNLIMITED_OCR_MODEL: Unlimited-OCR
+      UNLIMITED_OCR_TIMEOUT_SECONDS: ${UNLIMITED_OCR_TIMEOUT_SECONDS:-1200}
+      UNLIMITED_OCR_DPI: ${UNLIMITED_OCR_DPI:-300}
+    depends_on:
+      minio:
+        condition: service_healthy
+      unlimited-ocr:
+        condition: service_started
+    ports:
+      - "8000:8000"
+    command: ["uvicorn", "contract_review.api:app", "--host", "0.0.0.0", "--port", "8000"]
+
+volumes:
+  minio-data:
+  hf-cache:

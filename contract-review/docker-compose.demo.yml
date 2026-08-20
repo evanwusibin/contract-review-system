@@ -1,0 +1,69 @@
+# 本地演示栈：后端(RapidOCR) + MinIO + PostgreSQL
+# 不依赖 GPU / Unlimited-OCR，用于开发与演示闭环
+# STORAGE_BACKEND=postgres 时业务元数据落 PostgreSQL；=minio 时仅附件落 MinIO
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: contract-review-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-contract}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-contract}
+      POSTGRES_DB: ${POSTGRES_DB:-contract_review}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-contract} -d ${POSTGRES_DB:-contract_review}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  minio:
+    image: minio/minio:latest
+    container_name: contract-review-minio
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+    container_name: contract-review-backend
+    restart: unless-stopped
+    environment:
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-contract-review}
+      MINIO_SECURE: "false"
+      OCR_PROVIDER: rapid
+      STORAGE_BACKEND: ${STORAGE_BACKEND:-minio}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://contract:contract@postgres:5432/contract_review}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    ports:
+      - "8001:8000"
+    command: >
+      sh -c "cd /app && python -m alembic upgrade head &&
+             uvicorn contract_review.api:app --host 0.0.0.0 --port 8000"
+
+volumes:
+  postgres-data:
+  minio-data:

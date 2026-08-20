@@ -1,0 +1,85 @@
+# 生产栈：PostgreSQL(业务元数据) + MinIO(附件二进制) + 后端(RapidOCR, CPU)
+# 与 demo 栈的差异：ENVIRONMENT=production 触发门禁、AUTH_ENABLED=true、STORAGE_BACKEND=postgres、
+# 规则/用户/审计全部落库、会话签名与 CORS 收紧。
+#
+# 启动：
+#   cp .env.production.example .env.production   # 填写所有必填密钥
+#   docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
+#
+# 重启恢复验收：
+#   python scripts/verify_restart_recovery.py --pdf tests/data/test_contract_after_sales.pdf
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: contract-review-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-contract}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD 必须设置}
+      POSTGRES_DB: ${POSTGRES_DB:-contract_review}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-contract} -d ${POSTGRES_DB:-contract_review}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  minio:
+    image: minio/minio:latest
+    container_name: contract-review-minio
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY 必须设置}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    image: ${DOCKER_IMAGE:-18979909121/contract-review:latest}
+    container_name: contract-review-backend
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: production
+      DEMO_MODE: "false"
+      AUTH_ENABLED: "true"
+      STORAGE_BACKEND: postgres
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-contract}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-contract_review}
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET 必须设置}
+      SESSION_TTL_SECONDS: ${SESSION_TTL_SECONDS:-28800}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD 必须设置}
+      BUSINESS_PASSWORD: ${BUSINESS_PASSWORD:-business123}
+      LEGAL_PASSWORD: ${LEGAL_PASSWORD:-legal123}
+      WARRANTY_PASSWORD: ${WARRANTY_PASSWORD:-warranty123}
+      OCR_PROVIDER: rapid
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-contract-review}
+      MINIO_SECURE: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT:-8001}:8000"
+    command: >
+      sh -c "cd /app && python -m alembic upgrade head &&
+             uvicorn contract_review.api:app --host 0.0.0.0 --port 8000"
+
+volumes:
+  postgres-data:
+  minio-data:
