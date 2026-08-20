@@ -30,20 +30,25 @@ async function loadWorkbench(el, taskId) {
 
     const docName = attachments?.[0]?.file_name || task?.title || '合同文档'
     const statusMap = {
-      'imported': { label: '已导入', cls: 'blue' }, 'parsing': { label: '解析中', cls: 'amber' },
+      'pending': { label: '待处理', cls: 'blue' }, 'imported': { label: '已导入', cls: 'blue' }, 'parsing': { label: '解析中', cls: 'amber' },
       'reviewing': { label: '评审中', cls: 'amber' }, 'awaiting_confirmation': { label: '待确认', cls: 'amber' },
-      'confirming': { label: '会签中', cls: 'amber' }, 'confirmed': { label: '已确认', cls: 'green' },
+      'confirming': { label: '会签中', cls: 'amber' }, 'confirmed': { label: '已确认', cls: 'green' }, 'done': { label: '已完成', cls: 'green' },
       'blocked': { label: '阻塞', cls: 'red' }, 'rejected_recommendation': { label: '建议驳回', cls: 'red' }
     }
+    const writeMap = { 'not_written': { label: '未回写', cls: 'gray' }, 'writing': { label: '回写中', cls: 'amber' }, 'success': { label: '已回写', cls: 'green' }, 'failed': { label: '回写失败', cls: 'red' } }
     const st = statusMap[task?.status] || { label: task?.status || '-', cls: 'gray' }
+    const ws = writeMap[task?.write_status] || null
 
     el.innerHTML = `
       <div class="heading">
         <div>
           <h1>${task?.title || '合同评审'}</h1>
-          <p>${task?.external_task_key || ''} · 申请人：${task?.applicant_id || '-'} · <span class="pill ${st.cls}">${st.label}</span></p>
+          <p>${task?.external_task_key || ''} · 申请人：${task?.applicant_id || '-'} · <span class="pill ${st.cls}">${st.label}</span>${ws ? ` <span class="pill ${ws.cls}" title="2.4.4 回写状态"><svg class="svg-icon" aria-hidden="true"><use href="#icon-shield"></use></svg> ${ws.label}</span>` : ''}</p>
+          <p style="font-size:11px;color:#6b7280;margin-top:4px">5大工具链：待办→详情→解析→规则→保存→回写 · Agent 可一键闭环</p>
         </div>
         <div class="actions">
+          <button class="btn" id="wbAgent"><svg class="svg-icon" aria-hidden="true"><use href="#icon-spark"></use></svg> Agent 闭环</button>
+          <button class="btn" id="wbRetry" style="${task?.status === 'blocked' ? '' : 'display:none'}">重试解析</button>
           <button class="btn" id="wbBack">返回列表</button>
           <button class="btn primary" id="wbAudit">查看审计</button>
         </div>
@@ -52,13 +57,30 @@ async function loadWorkbench(el, taskId) {
         ${renderSource(docName, task, parse, attachments)}
         ${renderReview(task, review, version, parse)}
       </div>
+      <div id="wbTrajectory" class="card" style="margin-top:12px;display:none"><div class="card-head"><h2>Agent 轨迹</h2><span class="subtle">工具调用链路可观测</span></div><div class="review-body" id="wbTrajectoryBody"></div></div>
       <div class="footer-note">原型数据为脱敏示例，仅用于确认交互和业务流程，不代表正式评审结论。</div>`
 
     document.getElementById('wbBack').addEventListener('click', () => {
-      document.querySelector('.nav button[data-page="documents"]')?.click()
+      document.querySelector('.nav button[data-page="tasks"]')?.click()
     })
     document.getElementById('wbAudit').addEventListener('click', () => {
       showToast('已进入任务审计视图')
+    })
+    const agentBtn = document.getElementById('wbAgent')
+    if (agentBtn) agentBtn.addEventListener('click', async () => {
+      agentBtn.textContent = '执行中…'; agentBtn.disabled = true
+      try {
+        const r = await api.agentRun(task.external_task_key || taskId)
+        const d = r.data
+        showToast(`Agent 完成：${d.final_status} 风险 ${d.overall_risk_level || '-'}`)
+        document.getElementById('wbTrajectory').style.display = 'block'
+        document.getElementById('wbTrajectoryBody').innerHTML = (d.trajectory || []).map(s => `<div style="padding:6px 0;border-bottom:1px solid #f0f0f0"><b>${s.step}</b> · ${s.tool} · <span class="pill ${s.status === 'success' ? 'green' : s.status === 'blocked' ? 'red' : 'gray'}">${s.status}</span><div style="font-size:11px;color:#6b7280">${s.thought}</div></div>`).join('')
+        setTimeout(() => loadWorkbench(el, taskId), 800)
+      } catch (e) { showToast(e.message) } finally { agentBtn.disabled = false; agentBtn.innerHTML = '<svg class="svg-icon" aria-hidden="true"><use href="#icon-spark"></use></svg> Agent 闭环' }
+    })
+    const retryBtn = document.getElementById('wbRetry')
+    if (retryBtn) retryBtn.addEventListener('click', async () => {
+      try { await api.retryTask(taskId); showToast('已重试，进入 parsing'); loadWorkbench(el, taskId) } catch (e) { showToast(e.message) }
     })
   } catch (err) {
     el.innerHTML = `<div class="empty-state">加载失败：${err.message}</div>`

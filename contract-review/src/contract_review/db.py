@@ -40,6 +40,12 @@ class ApprovalTask(Base):
     contract_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
     applicant_id: Mapped[str] = mapped_column(String(128), nullable=False)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="imported")
+    write_status: Mapped[str] = mapped_column(String(32), nullable=False, default="not_written")
+    write_response_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    approval_code: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    applicant_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    applicant_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    attachment_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     recommendation_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
     current_version_id: Mapped[str | None] = mapped_column(PG_UUID(as_uuid=False), nullable=True)
     blocked_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
@@ -88,11 +94,16 @@ class ContractParse(Base):
     __tablename__ = "contract_parses"
 
     id: Mapped[str] = mapped_column(PG_UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid4()))
+    task_id: Mapped[str | None] = mapped_column(PG_UUID(as_uuid=False), ForeignKey("approval_tasks.id"), nullable=True)
     attachment_id: Mapped[str] = mapped_column(
         PG_UUID(as_uuid=False), ForeignKey("approval_attachments.id"), nullable=False, unique=True
     )
     parser_version: Mapped[str] = mapped_column(String(64), nullable=False)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="queued")
+    parse_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    parse_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    basic_info_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    clause_info_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     quality_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     extracted_payload: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
@@ -141,7 +152,11 @@ class RuleHit(Base):
     rule_id: Mapped[str] = mapped_column(
         PG_UUID(as_uuid=False), ForeignKey("review_rules.id"), nullable=False
     )
+    task_id: Mapped[str | None] = mapped_column(PG_UUID(as_uuid=False), ForeignKey("approval_tasks.id"), nullable=True)
     result: Mapped[str] = mapped_column(String(16), nullable=False)
+    hit_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    evidence_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    evidence_position: Mapped[str | None] = mapped_column(String(255), nullable=True)
     severity: Mapped[str] = mapped_column(String(16), nullable=False)
     message: Mapped[str] = mapped_column(String(1000), nullable=False)
     evidence: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
@@ -162,9 +177,13 @@ class ReviewResult(Base):
     attachment_id: Mapped[str] = mapped_column(
         PG_UUID(as_uuid=False), ForeignKey("approval_attachments.id"), nullable=False
     )
+    overall_risk_level: Mapped[str | None] = mapped_column(String(16), nullable=True)
     recommendation: Mapped[str] = mapped_column(String(32), nullable=False)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="draft")
     risk_summary: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    summary_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    focus_points_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    comment_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     review_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     required_roles: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     confirmed_roles: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
@@ -188,9 +207,11 @@ class CommentLog(Base):
     task_id: Mapped[str] = mapped_column(
         PG_UUID(as_uuid=False), ForeignKey("approval_tasks.id"), nullable=False
     )
-    result_id: Mapped[str] = mapped_column(
-        PG_UUID(as_uuid=False), ForeignKey("review_results.id"), nullable=False
+    result_id: Mapped[str | None] = mapped_column(
+        PG_UUID(as_uuid=False), ForeignKey("review_results.id"), nullable=True
     )
+    write_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    write_response_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     actor_id: Mapped[str] = mapped_column(String(128), nullable=False)
     role: Mapped[str] = mapped_column(String(32), nullable=False)
     action: Mapped[str] = mapped_column(String(32), nullable=False)
@@ -220,6 +241,9 @@ class TaskLog(Base):
     resource_id: Mapped[str] = mapped_column(String(64), nullable=False)
     before_state: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     after_state: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    log_level: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    log_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    log_content: Mapped[str | None] = mapped_column(Text, nullable=True)
     request_id: Mapped[str] = mapped_column(String(64), nullable=False, default="req_local")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
 

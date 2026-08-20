@@ -100,8 +100,51 @@ export async function getTaskReview(taskId) {
   return request(`/v1/tasks/${taskId}/review`)
 }
 
+export async function listPendingApprovals(limit = 10) {
+  return request(`/v1/approvals/pending?limit=${limit}`)
+}
+export async function getApproval(instanceId) {
+  return request(`/v1/approvals/${instanceId}`)
+}
+export async function downloadAttachment(instanceId, attachmentId) {
+  return request(`/v1/approvals/${instanceId}/attachments/${attachmentId}/download`, { method: 'POST' })
+}
+export async function parseDocument(documentId) {
+  const form = new FormData()
+  form.append('document_id', documentId)
+  return request('/v1/tools/parse', { method: 'POST', body: form })
+}
+export async function runRules(caseId) {
+  const form = new FormData()
+  form.append('case_id', caseId)
+  return request('/v1/tools/rules', { method: 'POST', body: form })
+}
+export async function saveResult(caseId, overall, summary, focus, comment) {
+  const form = new FormData()
+  form.append('case_id', caseId)
+  form.append('overall_risk_level', overall)
+  form.append('summary_text', summary)
+  form.append('focus_points_json', JSON.stringify(focus))
+  form.append('comment_text', comment)
+  return request('/v1/tools/result', { method: 'POST', body: form })
+}
+export async function writeComment(instanceId, reviewId) {
+  const form = new FormData()
+  form.append('review_id', reviewId)
+  return request(`/v1/approvals/${instanceId}/comments/write`, { method: 'POST', body: form })
+}
+export async function agentRun(instanceId) {
+  const form = new FormData()
+  form.append('instance_id', instanceId)
+  return request('/v1/agent/run', { method: 'POST', body: form })
+}
+export async function retryTask(taskId) {
+  return request(`/v1/tasks/${taskId}/retry`, { method: 'POST' })
+}
+
 export const api = {
   health, login, logout, me, listTasks, getTask, listVersions, getVersion,
   importContract, runReview, listRules, addRule, setRuleStatus,
-  listAuditEvents, getTaskAudit, getTaskReview
+  listAuditEvents, getTaskAudit, getTaskReview,
+  listPendingApprovals, getApproval, downloadAttachment, parseDocument, runRules, saveResult, writeComment, agentRun, retryTask
 }

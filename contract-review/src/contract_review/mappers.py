@@ -15,6 +15,7 @@ from contract_review.domain import (
     QualityStatus,
     TaskLog,
     TaskStatus,
+    WriteStatus,
 )
 from contract_review.parser import (
     ContractParse,
@@ -90,9 +91,12 @@ def task_to_orm(task: ApprovalTask) -> ApprovalTaskORM:
     return ApprovalTaskORM(
         id=str(task.id),
         external_task_key=task.external_task_key,
+        approval_code=getattr(task, "approval_code", None) or task.external_task_key,
         title=task.title,
         applicant_id=task.applicant_id,
+        applicant_name=getattr(task, "applicant_name", None) or task.applicant_id,
         status=task.status.value,
+        write_status=getattr(task, "write_status", WriteStatus.NOT_WRITTEN).value if hasattr(task, "write_status") else "not_written",
         blocked_reason=task.blocked_reason,
         created_at=task.created_at,
         updated_at=task.updated_at,
@@ -100,6 +104,11 @@ def task_to_orm(task: ApprovalTask) -> ApprovalTaskORM:
 
 
 def task_to_domain(orm: ApprovalTaskORM) -> ApprovalTask:
+    ws = getattr(orm, "write_status", None) or "not_written"
+    try:
+        write_status = WriteStatus(ws)
+    except Exception:
+        write_status = WriteStatus.NOT_WRITTEN
     return ApprovalTask(
         id=UUID(orm.id),
         external_task_key=orm.external_task_key,
@@ -109,6 +118,8 @@ def task_to_domain(orm: ApprovalTaskORM) -> ApprovalTask:
         blocked_reason=orm.blocked_reason,
         created_at=orm.created_at,
         updated_at=orm.updated_at,
+        write_status=write_status,
+        approval_code=getattr(orm, "approval_code", None) or orm.external_task_key,
     )
 
 
@@ -160,6 +171,9 @@ def log_to_orm(log: TaskLog) -> TaskLogORM:
         resource_id=log.resource_id,
         before_state=log.before_state,
         after_state=log.after_state,
+        log_level=getattr(log, "log_level", None),
+        log_type=getattr(log, "log_type", None) or log.action,
+        log_content=getattr(log, "log_content", None),
         request_id=log.request_id,
         created_at=log.created_at,
     )
@@ -182,13 +196,19 @@ def log_to_domain(orm: TaskLogORM) -> TaskLog:
 # ── ContractParse ────────────────────────────────────────────
 
 def parse_to_orm(parse: ContractParse) -> ContractParseORM:
+    payload = _payload_to_dict(getattr(parse, "extracted_payload", {}))
     return ContractParseORM(
         id=str(parse.id),
+        task_id=str(getattr(parse, "task_id", None)) if getattr(parse, "task_id", None) else None,
         attachment_id=str(parse.attachment_id),
         parser_version=parse.parser_version,
         status=parse.status.value,
+        parse_status=getattr(getattr(parse, "parse_status", None), "value", None) or parse.status.value,
+        parse_error=getattr(parse, "parse_error", None) or getattr(parse, "error_message", None),
+        basic_info_json=getattr(parse, "basic_info_json", None),
+        clause_info_json=getattr(parse, "clause_info_json", None),
         quality_score=parse.quality_score,
-        extracted_payload=_payload_to_dict(parse.extracted_payload),
+        extracted_payload=payload,
         error_code=parse.error_code,
         error_message=parse.error_message,
         started_at=parse.started_at,
@@ -197,7 +217,7 @@ def parse_to_orm(parse: ContractParse) -> ContractParseORM:
 
 
 def parse_to_domain(orm: ContractParseORM) -> ContractParse:
-    return ContractParse(
+    cp = ContractParse(
         id=UUID(orm.id),
         attachment_id=UUID(orm.attachment_id),
         parser_version=orm.parser_version,
@@ -209,6 +229,12 @@ def parse_to_domain(orm: ContractParseORM) -> ContractParse:
         started_at=orm.started_at,
         finished_at=orm.finished_at,
     )
+    object.__setattr__(cp, "task_id", UUID(orm.task_id) if getattr(orm, "task_id", None) else None)
+    object.__setattr__(cp, "parse_status", getattr(orm, "parse_status", None))
+    object.__setattr__(cp, "parse_error", getattr(orm, "parse_error", None))
+    object.__setattr__(cp, "basic_info_json", getattr(orm, "basic_info_json", None))
+    object.__setattr__(cp, "clause_info_json", getattr(orm, "clause_info_json", None))
+    return cp
 
 
 # ── RuleHit ──────────────────────────────────────────────────
@@ -216,9 +242,13 @@ def parse_to_domain(orm: ContractParseORM) -> ContractParse:
 def rule_hit_to_orm(hit: RuleHit) -> RuleHitORM:
     return RuleHitORM(
         id=str(hit.id),
+        task_id=str(getattr(hit, "task_id", None)) if getattr(hit, "task_id", None) else None,
         parse_id=str(hit.parse_id),
         rule_id=str(hit.rule_id),
         result=hit.result.value,
+        hit_status=getattr(hit, "hit_status", None) or hit.result.value,
+        evidence_text=getattr(hit, "evidence_text", None) or hit.message,
+        evidence_position=getattr(hit, "evidence_position", None),
         severity=hit.severity,
         message=hit.message,
         evidence=_evidence_to_dict(hit.evidence),
@@ -248,9 +278,13 @@ def result_to_orm(result: ReviewResult) -> ReviewResultORM:
         id=str(result.id),
         task_id=str(result.task_id),
         attachment_id=str(result.attachment_id),
+        overall_risk_level=getattr(result, "overall_risk_level", None),
         recommendation=result.recommendation.value,
         status=result.status.value,
         risk_summary=result.risk_summary,
+        summary_text=getattr(result, "summary_text", None) or getattr(result, "review_comment", None),
+        focus_points_json=getattr(result, "focus_points_json", None),
+        comment_text=getattr(result, "comment_text", None) or getattr(result, "review_comment", None),
         review_comment=result.review_comment,
         required_roles=list(result.required_roles),
         confirmed_roles=list(result.confirmed_roles),

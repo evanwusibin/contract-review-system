@@ -8,14 +8,40 @@ from uuid import UUID, uuid4
 
 
 class TaskStatus(StrEnum):
-    IMPORTED = "imported"
+    # 2.4.4 规范状态
+    PENDING = "pending"
     PARSING = "parsing"
     REVIEWING = "reviewing"
+    BLOCKED = "blocked"
+    DONE = "done"
+    # 兼容历史状态
+    IMPORTED = "imported"
     AWAITING_CONFIRMATION = "awaiting_confirmation"
     CONFIRMING = "confirming"
     CONFIRMED = "confirmed"
     REJECTED_RECOMMENDATION = "rejected_recommendation"
-    BLOCKED = "blocked"
+
+    def to_spec(self) -> str:
+        mapping = {
+            self.PENDING: "pending",
+            self.PARSING: "parsing",
+            self.REVIEWING: "reviewing",
+            self.BLOCKED: "blocked",
+            self.DONE: "done",
+            self.IMPORTED: "pending",
+            self.AWAITING_CONFIRMATION: "reviewing",
+            self.CONFIRMING: "reviewing",
+            self.CONFIRMED: "done",
+            self.REJECTED_RECOMMENDATION: "blocked",
+        }
+        return mapping.get(self, self.value)
+
+
+class WriteStatus(StrEnum):
+    NOT_WRITTEN = "not_written"
+    WRITING = "writing"
+    SUCCESS = "success"
+    FAILED = "failed"
 
 
 class QualityStatus(StrEnum):
@@ -45,6 +71,22 @@ class ApprovalTask:
     blocked_reason: str | None
     created_at: datetime
     updated_at: datetime
+    write_status: WriteStatus = WriteStatus.NOT_WRITTEN
+    approval_code: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.approval_code is None:
+            self.approval_code = self.external_task_key
+
+    def can_retry(self) -> bool:
+        return self.status == TaskStatus.BLOCKED
+
+    def retry(self) -> None:
+        if not self.can_retry():
+            raise ValueError(f"仅 blocked 状态可重试，当前 {self.status}")
+        self.status = TaskStatus.PARSING
+        self.blocked_reason = None
+        self.updated_at = datetime.now(timezone.utc)
 
 
 @dataclass

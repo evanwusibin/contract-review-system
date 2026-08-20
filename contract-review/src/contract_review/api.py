@@ -44,7 +44,18 @@ def _error(code: str, message: str, retryable: bool = False) -> dict[str, str | 
 
 
 def _task_data(task) -> dict:
-    return jsonable_encoder(asdict(task))
+    data = jsonable_encoder(asdict(task))
+    if "external_task_key" in data and "approval_code" not in data:
+        data["approval_code"] = data["external_task_key"]
+    if "write_status" not in data:
+        data["write_status"] = getattr(task, "write_status", "not_written")
+        if hasattr(data["write_status"], "value"):
+            data["write_status"] = data["write_status"].value
+    try:
+        data["task_status"] = task.status.to_spec() if hasattr(task.status, "to_spec") else task.status.value
+    except Exception:
+        data["task_status"] = data.get("status")
+    return data
 
 
 def _version_data(version) -> dict:
@@ -363,6 +374,99 @@ def create_app(storage: ObjectStorage | ContractReviewWorkflow | None = None, oc
             raise HTTPException(status_code=404, detail=_error("TASK_NOT_FOUND", "任务不存在"))
         logs = [jsonable_encoder(asdict(log)) for log in audit.list_for_task(task_id)]
         return _response("req_task_audit", {"task_id": str(task_id), "items": logs, "total": len(logs)})
+
+    # ── Tools API (2.4.10) & Agent API ────────────────────────────
+    @app.get("/v1/approvals/pending")
+    async def list_pending_contract_approvals(limit: int = 10) -> dict[str, object]:
+        from contract_review.tools import list_pending_contract_approvals as _list
+        data = _list(store, limit=limit)
+        return _response("req_pending", data)
+
+    @app.get("/v1/approvals/{instance_id}")
+    async def get_contract_approval(instance_id: str) -> dict[str, object]:
+        from contract_review.tools import get_contract_approval as _get
+        try:
+            data = _get(store, instance_id)
+        except ValueError as exc:
+            raise HTTPException(status_code=404, detail=_error("APPROVAL_NOT_FOUND", str(exc))) from exc
+        return _response("req_approval", data)
+
+    @app.post("/v1/approvals/{instance_id}/attachments/{attachment_id}/download")
+    async def download_contract_attachment(instance_id: str, attachment_id: str) -> dict[str, object]:
+        from contract_review.tools import download_contract_attachment as _dl
+        data = _dl(store, instance_id, attachment_id)
+        if "file_content" in data:
+            data = {k: v for k, v in data.items() if k != "file_content"}
+        return _response("req_download", data)
+
+    @app.post("/v1/tools/parse")
+    async def parse_contract_document(document_id: str = Form(...)) -> dict[str, object]:
+        from contract_review.tools import parse_contract_document as _parse
+        content = None
+        try:
+            att = store.get_attachment(UUID(document_id))
+            if att is not None:
+                try:
+                    content = workflow.importer.objects.get(att.storage_key)
+                except Exception:
+                    content = None
+        except Exception:
+            content = None
+        data = _parse(store, workflow.parser, document_id, content)
+        return _response("req_parse", data)
+
+    @app.post("/v1/tools/rules")
+    async def run_contract_rules(case_id: str = Form(...)) -> dict[str, object]:
+        from contract_review.tools import run_contract_rules as _run
+        try:
+            data = _run(store, workflow.rules, _active_rules(), case_id)
+        except ValueError as exc:
+            raise HTTPException(status_code=404, detail=_error("CASE_NOT_FOUND", str(exc))) from exc
+        return _response("req_rules_run", data)
+
+    @app.post("/v1/tools/result")
+    async def save_review_result(case_id: str = Form(...), overall_risk_level: str = Form(...), summary_text: str = Form(...), focus_points_json: str = Form("[]"), comment_text: str = Form(...)) -> dict[str, object]:
+        from contract_review.tools import save_review_result as _save
+        import json as _json
+        try:
+            focus = _json.loads(focus_points_json) if focus_points_json else []
+        except Exception:
+            focus = []
+        try:
+            data = _save(store, case_id, overall_risk_level, summary_text, focus, comment_text)
+        except ValueError as exc:
+            raise HTTPException(status_code=404, detail=_error("CASE_NOT_FOUND", str(exc))) from exc
+        return _response("req_save_result", data)
+
+    @app.post("/v1/approvals/{instance_id}/comments/write")
+    async def write_approval_comment(instance_id: str, review_id: str = Form(...)) -> dict[str, object]:
+        from contract_review.tools import write_approval_comment as _write
+        try:
+            data = _write(store, instance_id, review_id)
+        except ValueError as exc:
+            raise HTTPException(status_code=404, detail=_error("WRITE_FAILED", str(exc))) from exc
+        return _response("req_write", data)
+
+    @app.post("/v1/agent/run")
+    async def agent_run(instance_id: str = Form(...)) -> dict[str, object]:
+        from contract_review.agent import ContractReviewAgent
+        agent = ContractReviewAgent(store, workflow.parser, workflow.rules, _active_rules())
+        result = agent.run_full_loop(instance_id)
+        return _response("req_agent", {"instance_id": result.instance_id, "final_status": result.final_status, "overall_risk_level": result.overall_risk_level, "summary_text": result.summary_text, "blocked_reason": result.blocked_reason, "trajectory": [asdict(s) for s in result.trajectory]})
+
+    @app.post("/v1/tasks/{task_id}/retry")
+    async def retry_blocked(task_id: UUID) -> dict[str, object]:
+        task = store.get_task(task_id)
+        if task is None:
+            task = store.find_task(str(task_id))
+        if task is None:
+            raise HTTPException(status_code=404, detail=_error("TASK_NOT_FOUND", "任务不存在"))
+        try:
+            task.retry()
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=_error("RETRY_NOT_ALLOWED", str(exc))) from exc
+        store.save_task(task)
+        return _response("req_retry", {"task_id": str(task.id), "status": task.status.value, "write_status": getattr(task, "write_status", "not_written").value if hasattr(task, "write_status") else "not_written"})
 
     # ── Review Detail API（评审工作台数据源）────────────────────
 
