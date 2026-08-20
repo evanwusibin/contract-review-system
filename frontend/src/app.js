@@ -23,6 +23,7 @@ const PAGES = {
 }
 
 const CRUMB = {
+  welcome: '首页',
   dashboard: '智能评审指挥中心',
   tasks: '待审任务',
   documents: '合同评审文档',
@@ -30,8 +31,7 @@ const CRUMB = {
   versions: '合同版本',
   rules: '规则中心',
   audit: '审计记录',
-  governance: 'AI 知识与治理中心',
-  welcome: '欢迎'
+  governance: 'AI 知识与治理中心'
 }
 
 let currentTaskId = null
@@ -49,7 +49,7 @@ export function mount(rootEl) {
         renderLogin(rootEl)
         return
       }
-      renderApp(rootEl, 'dashboard')
+      renderApp(rootEl, 'welcome')
     })
     .catch(() => {
       clearUser()
@@ -60,17 +60,19 @@ export function mount(rootEl) {
 function renderApp(rootEl, page) {
   rootEl.innerHTML = ''
   const wrap = document.createElement('div')
-  wrap.className = 'flex min-h-screen bg-[#F8FAFC]'
+  wrap.className = 'flex h-screen overflow-hidden'
+  wrap.style.background = 'linear-gradient(135deg,#eef4ff 0%,#f4f1ff 42%,#effaf6 100%)'
   const sidebar = createSidebar(page)
   wrap.appendChild(sidebar)
   const main = document.createElement('main')
-  main.className = 'flex-1 flex flex-col min-w-0'
+  main.className = 'flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden'
   const topbar = document.createElement('header')
   topbar.className = 'h-[56px] bg-white border-b border-[#E2E8F0] flex items-center px-6 justify-between shrink-0'
   topbar.innerHTML = `<div class="text-sm text-[#64748B]">合同智能评审 <span class="mx-2">/</span><b class="text-[#0F172A]">${CRUMB[page] || ''}</b></div><div class="text-xs text-[#94A3B8] hidden sm:block"></div>`
   main.appendChild(topbar)
   const content = document.createElement('section')
-  content.className = 'flex-1 p-6 overflow-auto bg-[#F8FAFC] min-w-0'
+  content.className = 'flex-1 p-6 overflow-y-auto overflow-x-hidden min-w-0 min-h-0'
+  content.style.background = 'transparent'
   content.id = 'page-content'
   main.appendChild(content)
   wrap.appendChild(main)
@@ -81,6 +83,7 @@ function renderApp(rootEl, page) {
 }
 
 const NAV_ITEMS = [
+  { page: 'welcome', icon: 'icon-home', label: '工作台首页' },
   { page: 'dashboard', icon: 'icon-dashboard', label: '指挥中心' },
   { page: 'tasks', icon: 'icon-inbox', label: '待审任务' },
   { page: 'documents', icon: 'icon-file', label: '合同文档' },
@@ -93,14 +96,18 @@ const NAV_ITEMS = [
 
 function createSidebar(activePage) {
   const aside = document.createElement('aside')
-  aside.className = 'w-[264px] shrink-0 bg-white border-r border-[#E2E8F0] flex flex-col'
+  aside.className = 'w-[220px] shrink-0 bg-white border-r border-[#E2E8F0] flex flex-col'
   const user = getUser()
   const roleName = user?.roleName || '法务审核人'
   const avatarLetter = (user?.name || '法')[0]
   aside.innerHTML = `
-    <div class="h-[72px] flex items-center px-[18px] border-b border-[#E2E8F0]">
-      <div>
-        <div class="text-[15px] font-extrabold tracking-[-0.5px] text-[#0F172A] leading-none">合同智能评审</div>
+    <div class="h-[56px] flex items-center px-[18px] border-b border-[#E2E8F0]">
+      <div class="flex items-center gap-[8px]">
+        <span class="text-[18px] font-extrabold tracking-[-0.045em] whitespace-nowrap bg-gradient-to-r from-[#2563eb] via-[#7c3aed] to-[#d946ef] text-transparent" style="background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent">合同智能评审</span>
+        <span class="inline-flex items-center gap-[3px] px-[6px] py-[2px] rounded-full text-[11px] font-bold text-white bg-gradient-to-r from-[#2563eb] via-[#7c3aed] to-[#d946ef] shadow-[0_2px_8px_rgba(124,58,237,.35)]">
+          <svg class="w-[12px] h-[12px]" style="stroke:white;fill:none" aria-hidden="true"><use href="#icon-spark"></use></svg>
+          AI
+        </span>
       </div>
     </div>
     <div class="flex-1 p-3 space-y-4">

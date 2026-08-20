@@ -23,7 +23,7 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 .crumb b{color:var(--ink)}
 .top-actions{margin-left:auto;display:flex;align-items:center;gap:16px;color:var(--sub);font-size:12px}
 .avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#e0e7ff;color:#4f46e5;font-weight:700}
-.content{max-width:1540px;width:100%;margin:auto;padding:30px 34px 44px;overflow:auto;flex:1}
+.content{max-width:1540px;width:100%;margin:auto;padding:30px 34px 44px;overflow:auto;flex:1;min-height:0}
 
 /* ── 侧边栏 ── */
 .sidebar{height:100vh;overflow:hidden;background:rgba(255,255,255,.78);border-right:1px solid rgba(226,232,240,.85);padding:22px 14px;display:flex;flex-direction:column;gap:30px;backdrop-filter:blur(16px)}
@@ -46,8 +46,27 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 .logout{display:flex;align-items:center;gap:5px;color:var(--sub);font-size:11px;margin:0 0 0 auto;padding:5px 0}
 .account-user .logout:hover{color:var(--red)}
 
-/* ── 登录页 ── */
-.login-layer{position:fixed;inset:0;z-index:20;display:grid;grid-template-columns:7fr 3fr;background:#fff}
+/* ── 登录页（轮播 + 表单） ── */
+.login-layer{position:fixed;inset:0;z-index:20;display:flex;height:100vh;overflow:hidden;background:#fff}
+.carousel-pane{flex:1;position:relative;overflow:hidden;background:#0f172a}
+.carousel-brand{position:absolute;top:28px;left:32px;z-index:5;display:flex;align-items:center;gap:10px}
+.carousel-brand-icon{width:34px;height:34px;background:rgba(255,255,255,.15);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center}
+.carousel-brand-icon svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2}
+.carousel-brand-name{font-size:15px;font-weight:600;color:#fff;letter-spacing:.5px}
+.carousel-brand-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:1px}
+.slides{display:flex;width:100%;height:100%;transition:transform 1s cubic-bezier(.25,.46,.45,.94)}
+.slide{flex:0 0 100%;height:100%;position:relative;background-size:cover;background-position:center}
+.slide::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(10,20,60,.30) 0%,rgba(26,86,219,.08) 50%,rgba(10,20,40,.35) 100%)}
+.slide video{position:relative;z-index:1}
+.caption-wrap{position:absolute;top:50%;left:48px;right:80px;z-index:1;transform:translateY(-50%) translateX(80px);opacity:0;transition:opacity .8s ease .35s, transform .8s ease .35s}
+.slide.active .caption-wrap{transform:translateY(-50%) translateX(0);opacity:1}
+.slide-tag{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;background:rgba(255,255,255,.12);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);color:#e0eaff;font-size:14px;font-weight:500;margin-bottom:18px}
+.slide-tag::before{content:'';width:7px;height:7px;border-radius:50%;background:#60a5fa;box-shadow:0 0 6px #60a5fa}
+.slide-title{font-size:44px;font-weight:700;color:#fff;line-height:1.2;letter-spacing:-.5px;margin-bottom:14px;text-shadow:0 2px 12px rgba(0,0,0,.4)}
+.slide-desc{font-size:17px;color:rgba(220,235,255,.88);line-height:1.7;max-width:500px;text-shadow:0 1px 6px rgba(0,0,0,.3)}
+.carousel-dots{position:absolute;bottom:24px;left:48px;z-index:3;display:flex;gap:8px;align-items:center}
+.dot{width:24px;height:4px;background:rgba(255,255,255,.3);cursor:pointer;transition:all .3s}
+.dot.active{width:40px;background:#fff}
 .login-visual{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:60px clamp(32px,8vw,120px);text-align:left;color:#fff;background:linear-gradient(135deg,#e90055 0%,#bd0acb 48%,#2424d8 100%)}
 .login-visual:before,.login-visual:after{content:"";position:absolute;border-radius:50%;background:#ffffff12}
 .login-visual:before{width:620px;height:620px;right:-220px;top:-150px}
@@ -63,7 +82,8 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 .login-visual .visual-note{max-width:560px;margin-top:18px;color:#ffffffb8;font-size:11px}
 .login-visual .visual-ai{display:inline-flex;align-items:center;gap:6px;font-size:15px;font-weight:700;letter-spacing:.04em}
 .login-visual .visual-ai .svg-icon{width:19px;height:19px}
-.login-box{align-self:center;justify-self:center;width:min(390px,calc(100% - 56px));padding:0 0 24px;background:#fff}
+.login-box{width:420px;flex-shrink:0;background:#fff;display:flex;flex-direction:column;justify-content:center;padding:40px 44px;position:relative;overflow-y:auto}
+.login-box::before{content:'';position:absolute;top:0;left:0;bottom:0;width:1px;background:linear-gradient(180deg,transparent,#e2e8f0 20%,#e2e8f0 80%,transparent)}
 .login-box h2{margin:0;font-size:24px;letter-spacing:-.04em}
 .login-title-ai{display:inline-flex;vertical-align:3px;margin-left:7px;padding:3px 8px;border-radius:99px;font-size:10px;font-weight:800;letter-spacing:.04em;background:linear-gradient(90deg,#2563eb,#7c3aed,#d946ef);color:#fff;box-shadow:0 4px 10px #7c3aed2b}
 .login-box p{color:var(--sub);font-size:12px;margin:7px 0 24px}
@@ -261,6 +281,7 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 .toast.show{opacity:1;transform:none}
 
 /* ── 响应式 ── */
+@media(max-width:900px){.carousel-pane{display:none}.login-box{width:100%;padding:40px 28px}.login-layer{justify-content:center}}
 @media(max-width:1050px){
   .app{grid-template-columns:220px 1fr}
   .sidebar{padding:20px 9px}

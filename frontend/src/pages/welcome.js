@@ -60,7 +60,7 @@ export function renderWelcome(el) {
     showReviewForm()
   })
   document.getElementById('welcomeViewTasks').addEventListener('click', () => {
-    document.querySelector('.nav button[data-page="tasks"]')?.click()
+    document.querySelector('button[data-page="tasks"]')?.click()
   })
 
   loadStats()

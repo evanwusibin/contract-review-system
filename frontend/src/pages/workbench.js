@@ -24,6 +24,11 @@ export function renderWorkbench(el, taskId) {
 }
 
 async function loadWorkbench(el, taskId) {
+  // 空任务守卫：未选择任务时直接提示，不发 null 请求
+  if (!taskId || taskId === 'null' || taskId === 'undefined') {
+    el.innerHTML = `<div class="empty-state">尚未选择评审任务<br><button class="btn primary" style="margin-top:12px" onclick="document.querySelector('button[data-page=&quot;tasks&quot;]')?.click()">去选择任务</button></div>`
+    return
+  }
   // 兼容：dashboard 传入的是 approval_code (CTR-...)，而 tasks 传入的是 UUID
   let resolvedId = taskId
   let isMockApproval = false
@@ -109,11 +114,15 @@ async function loadWorkbench(el, taskId) {
       <div class="footer-note">原型数据为脱敏示例，仅用于确认交互和业务流程，不代表正式评审结论。</div>`
 
     document.getElementById('wbBack').addEventListener('click', () => {
-      document.querySelector('.nav button[data-page="tasks"]')?.click()
+      document.querySelector('button[data-page="tasks"]')?.click()
     })
     document.getElementById('wbAudit').addEventListener('click', () => {
-      showToast('已进入任务审计视图')
+      document.querySelector('button[data-page="audit"]')?.click()
     })
+    const manualBtn = document.getElementById('wbManual')
+    if (manualBtn) manualBtn.addEventListener('click', () => showToast('已发起补证流程（模拟）', 'success'))
+    const rejectBtn = document.getElementById('wbReject')
+    if (rejectBtn) rejectBtn.addEventListener('click', () => showToast('已确认驳回建议（模拟）', 'success'))
     const agentBtn = document.getElementById('wbAgent')
     if (agentBtn) agentBtn.addEventListener('click', async () => {
       agentBtn.textContent = '执行中…'; agentBtn.disabled = true
@@ -126,6 +135,8 @@ async function loadWorkbench(el, taskId) {
         setTimeout(() => loadWorkbench(el, taskId), 800)
       } catch (e) { const m = e?.message || e?.detail || JSON.stringify(e).slice(0,200); showToast(m) } finally { agentBtn.disabled = false; agentBtn.innerHTML = '<svg class="svg-icon" aria-hidden="true"><use href="#icon-spark"></use></svg> Agent 闭环' }
     })
+    const viewAllRisks = document.getElementById('wbViewAllRisks')
+    if (viewAllRisks) viewAllRisks.addEventListener('click', () => showToast(`共 ${highCount + medCount + lowCount} 项规则命中`))
     const retryBtn = document.getElementById('wbRetry')
     if (retryBtn) retryBtn.addEventListener('click', async () => {
       try { await api.retryTask(resolvedId); showToast('已重试，进入 parsing'); loadWorkbench(el, taskId) } catch (e) { const m = e?.message || e?.detail || JSON.stringify(e).slice(0,200); showToast(m) }
@@ -273,7 +284,7 @@ function renderReview(task, review, version, parse) {
       <div class="card">
         <div class="card-head">
           <div><h2>风险与规则命中</h2><span class="subtle">点击风险项，左侧定位对应证据</span></div>
-          <button class="link">查看全部 ${highCount + medCount + lowCount} 项</button>
+          <button class="link" id="wbViewAllRisks">查看全部 ${highCount + medCount + lowCount} 项</button>
         </div>
         ${riskHtml}
       </div>
