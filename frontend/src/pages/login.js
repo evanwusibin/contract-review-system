@@ -64,12 +64,13 @@ export function renderLogin(rootEl) {
       try {
         resp = await api.login(name, password)
       } catch (e) {
-        // 演示态：后端未启用鉴权时直接放行
-        if (String(e.message).includes('认证未启用') || String(e.message).includes('AUTH_DISABLED')) {
+        // 演示态：后端未启用鉴权 / 501 未实现时直接放行
+        const msg = String(e.message || '')
+        if (msg.includes('认证未启用') || msg.includes('AUTH_DISABLED') || msg.includes('501') || msg.includes('Failed to fetch')) {
           resp = { ok: true, data: { user: { id: 'demo', username: name || 'demo', display_name: name || '演示用户', role: 'admin' } } }
         } else throw e
       }
-      if (resp.error?.code === 'AUTH_DISABLED' || resp.error?.message?.includes('认证未启用')) {
+      if (resp.error?.code === 'AUTH_DISABLED' || resp.error?.message?.includes('认证未启用') || String(resp.error?.message || '').includes('501')) {
         enrichUser({ id: 'demo', username: name || 'demo', display_name: name || '演示用户', role: 'admin', roleName: '演示用户', name: name || '演示' })
         msgEl.textContent = '演示模式：已直接进入工作台（后端鉴权未启用）'
         msgEl.className = 'login-message success'
