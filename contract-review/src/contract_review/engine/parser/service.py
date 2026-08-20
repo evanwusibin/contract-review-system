@@ -5,7 +5,7 @@ from re import search
 from uuid import UUID, uuid4
 
 from contract_review.domain import ApprovalAttachment, ApprovalTask, InMemoryReviewStore, TaskLog, TaskStatus
-from contract_review.ocr import OCRDocument, OCRPage, OCRProviderError
+from contract_review.infrastructure.ocr.provider import OCRDocument, OCRPage, OCRProviderError
 
 
 class ParseStatus(StrEnum):

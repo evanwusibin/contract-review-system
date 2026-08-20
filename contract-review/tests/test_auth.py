@@ -1,4 +1,4 @@
-from contract_review.auth import (
+from contract_review.common.auth import (
     ROLE_ADMIN,
     SessionManager,
     UserInfo,

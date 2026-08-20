@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from contract_review.domain import ApprovalAttachment, ApprovalTask, InMemoryReviewStore, QualityStatus, TaskLog, TaskStatus
-from contract_review.ocr import OCRPageQuality, OCRProvider, OCRProviderError
+from contract_review.infrastructure.ocr.provider import OCRPageQuality, OCRProvider, OCRProviderError
 
 
 @dataclass(frozen=True)

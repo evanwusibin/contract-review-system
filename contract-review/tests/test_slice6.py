@@ -4,8 +4,8 @@ from uuid import uuid4
 import pytest
 
 from contract_review.domain import ApprovalTask, InMemoryReviewStore, TaskStatus
-from contract_review.results import Recommendation, ResultStatus, ReviewResult
-from contract_review.versions import ReviewVersionService, VersionSaveError
+from contract_review.engine.workflow.results import Recommendation, ResultStatus, ReviewResult
+from contract_review.engine.workflow.versions import ReviewVersionService, VersionSaveError
 
 
 def task() -> ApprovalTask:

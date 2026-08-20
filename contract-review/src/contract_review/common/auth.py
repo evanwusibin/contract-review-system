@@ -25,8 +25,8 @@ from uuid import UUID
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from sqlalchemy import select
 
-from contract_review.db import User as UserORM
-from contract_review.database import get_sync_session_factory
+from contract_review.infrastructure.persistence.models import User as UserORM
+from contract_review.infrastructure.persistence.database import get_sync_session_factory
 
 PBKDF2_ALGO = "sha256"
 PBKDF2_ITERATIONS = 600_000

@@ -12,7 +12,7 @@
 from pathlib import Path
 import importlib.util
 
-from contract_review.ocr import (
+from contract_review.infrastructure.ocr.provider import (
     create_ocr_provider,
     MockOCRProvider,
     OCRProviderError,

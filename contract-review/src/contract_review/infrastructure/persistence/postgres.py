@@ -12,8 +12,8 @@ from uuid import UUID
 
 from sqlalchemy import and_, desc, select
 
-from contract_review.database import get_sync_session_factory
-from contract_review.db import (
+from contract_review.infrastructure.persistence.database import get_sync_session_factory
+from contract_review.infrastructure.persistence.models import (
     ApprovalAttachment as ApprovalAttachmentORM,
     ApprovalTask as ApprovalTaskORM,
     CommentLog as CommentLogORM,
@@ -29,10 +29,10 @@ from contract_review.domain import (
     InMemoryReviewStore,
     TaskLog,
 )
-from contract_review.parser import ContractParse
-from contract_review.results import CommentLog, ReviewResult
-from contract_review.rules import RuleHit
-from contract_review.mappers import (
+from contract_review.engine.parser.service import ContractParse
+from contract_review.engine.workflow.results import CommentLog, ReviewResult
+from contract_review.engine.rules.engine import RuleHit
+from contract_review.infrastructure.persistence.mappers import (
     attachment_to_domain,
     attachment_to_orm,
     comment_to_domain,
@@ -50,7 +50,7 @@ from contract_review.mappers import (
     version_to_domain,
     version_to_orm,
 )
-from contract_review.versions import ReviewVersion
+from contract_review.engine.workflow.versions import ReviewVersion
 
 
 class PostgresReviewStore(InMemoryReviewStore):

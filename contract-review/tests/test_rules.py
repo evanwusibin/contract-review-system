@@ -1,5 +1,5 @@
-from contract_review.mappers import rule_to_domain, rule_to_orm
-from contract_review.rules import (
+from contract_review.infrastructure.persistence.mappers import rule_to_domain, rule_to_orm
+from contract_review.engine.rules.engine import (
     RULE_ID_PARTY_001,
     RuleStatus,
     party_completeness_rule,

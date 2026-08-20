@@ -7,32 +7,32 @@ from fastapi import FastAPI, File, Form, HTTPException, Request, Response, Uploa
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 
-from contract_review.auth import (
+from contract_review.common.auth import (
     ROLE_ADMIN,
     SESSION_COOKIE,
     SessionManager,
     UserInfo,
     UserRepository,
 )
-from contract_review.audit import AuditService
-from contract_review.config import load_settings, validate_production_settings
-from contract_review.database import is_postgres_enabled
+from contract_review.common.audit import AuditService
+from contract_review.common.config import load_settings, validate_production_settings
+from contract_review.infrastructure.persistence.database import is_postgres_enabled
 from contract_review.domain import ContractImporter, ImportRequest, InMemoryReviewStore
-from contract_review.postgres_store import PostgresReviewStore
-from contract_review.rule_store import RuleRepository
-from contract_review.ocr import create_ocr_provider
-from contract_review.parser import ContractParser
-from contract_review.quality import QualityDiagnostic
-from contract_review.results import ReviewResultService
-from contract_review.rules import (
+from contract_review.infrastructure.persistence.postgres import PostgresReviewStore
+from contract_review.engine.rules.repository import RuleRepository
+from contract_review.infrastructure.ocr.provider import create_ocr_provider
+from contract_review.engine.parser.service import ContractParser
+from contract_review.engine.parser.quality import QualityDiagnostic
+from contract_review.engine.workflow.results import ReviewResultService
+from contract_review.engine.rules.engine import (
     RestrictedRuleEngine,
     party_completeness_rule,
     party_completeness_rule_v2,
     warranty_clause_rule,
 )
-from contract_review.storage import ObjectStorage, create_memory_storage, create_storage
-from contract_review.versions import ReviewVersionService
-from contract_review.workflow import ContractReviewWorkflow, WorkflowError, SimulatedApprovalGateway
+from contract_review.infrastructure.storage.object_store import ObjectStorage, create_memory_storage, create_storage
+from contract_review.engine.workflow.versions import ReviewVersionService
+from contract_review.engine.workflow.workflow import ContractReviewWorkflow, WorkflowError, SimulatedApprovalGateway
 
 
 def _response(request_id: str, data: object = None, error: dict | None = None) -> dict[str, object]:
@@ -378,13 +378,13 @@ def create_app(storage: ObjectStorage | ContractReviewWorkflow | None = None, oc
     # ── Tools API (2.4.10) & Agent API ────────────────────────────
     @app.get("/v1/approvals/pending")
     async def list_pending_contract_approvals(limit: int = 10) -> dict[str, object]:
-        from contract_review.tools import list_pending_contract_approvals as _list
+        from contract_review.application.tools.contract_tools import list_pending_contract_approvals as _list
         data = _list(store, limit=limit)
         return _response("req_pending", data)
 
     @app.get("/v1/approvals/{instance_id}")
     async def get_contract_approval(instance_id: str) -> dict[str, object]:
-        from contract_review.tools import get_contract_approval as _get
+        from contract_review.application.tools.contract_tools import get_contract_approval as _get
         try:
             data = _get(store, instance_id)
         except ValueError as exc:
@@ -393,7 +393,7 @@ def create_app(storage: ObjectStorage | ContractReviewWorkflow | None = None, oc
 
     @app.post("/v1/approvals/{instance_id}/attachments/{attachment_id}/download")
     async def download_contract_attachment(instance_id: str, attachment_id: str) -> dict[str, object]:
-        from contract_review.tools import download_contract_attachment as _dl
+        from contract_review.application.tools.contract_tools import download_contract_attachment as _dl
         data = _dl(store, instance_id, attachment_id)
         if "file_content" in data:
             data = {k: v for k, v in data.items() if k != "file_content"}
@@ -401,7 +401,7 @@ def create_app(storage: ObjectStorage | ContractReviewWorkflow | None = None, oc
 
     @app.post("/v1/tools/parse")
     async def parse_contract_document(document_id: str = Form(...)) -> dict[str, object]:
-        from contract_review.tools import parse_contract_document as _parse
+        from contract_review.application.tools.contract_tools import parse_contract_document as _parse
         content = None
         try:
             att = store.get_attachment(UUID(document_id))
@@ -417,7 +417,7 @@ def create_app(storage: ObjectStorage | ContractReviewWorkflow | None = None, oc
 
     @app.post("/v1/tools/rules")
     async def run_contract_rules(case_id: str = Form(...)) -> dict[str, object]:
-        from contract_review.tools import run_contract_rules as _run
+        from contract_review.application.tools.contract_tools import run_contract_rules as _run
         try:
             data = _run(store, workflow.rules, _active_rules(), case_id)
         except ValueError as exc:
@@ -426,7 +426,7 @@ def create_app(storage: ObjectStorage | ContractReviewWorkflow | None = None, oc
 
     @app.post("/v1/tools/result")
     async def save_review_result(case_id: str = Form(...), overall_risk_level: str = Form(...), summary_text: str = Form(...), focus_points_json: str = Form("[]"), comment_text: str = Form(...)) -> dict[str, object]:
-        from contract_review.tools import save_review_result as _save
+        from contract_review.application.tools.contract_tools import save_review_result as _save
         import json as _json
         try:
             focus = _json.loads(focus_points_json) if focus_points_json else []
@@ -440,7 +440,7 @@ def create_app(storage: ObjectStorage | ContractReviewWorkflow | None = None, oc
 
     @app.post("/v1/approvals/{instance_id}/comments/write")
     async def write_approval_comment(instance_id: str, review_id: str = Form(...)) -> dict[str, object]:
-        from contract_review.tools import write_approval_comment as _write
+        from contract_review.application.tools.contract_tools import write_approval_comment as _write
         try:
             data = _write(store, instance_id, review_id)
         except ValueError as exc:
@@ -449,7 +449,7 @@ def create_app(storage: ObjectStorage | ContractReviewWorkflow | None = None, oc
 
     @app.post("/v1/agent/run")
     async def agent_run(instance_id: str = Form(...)) -> dict[str, object]:
-        from contract_review.agent import ContractReviewAgent
+        from contract_review.application.agent.review_agent import ContractReviewAgent
         agent = ContractReviewAgent(store, workflow.parser, workflow.rules, _active_rules())
         result = agent.run_full_loop(instance_id)
         return _response("req_agent", {"instance_id": result.instance_id, "final_status": result.final_status, "overall_risk_level": result.overall_risk_level, "summary_text": result.summary_text, "blocked_reason": result.blocked_reason, "trajectory": [asdict(s) for s in result.trajectory]})

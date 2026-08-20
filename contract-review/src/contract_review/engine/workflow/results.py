@@ -4,7 +4,7 @@ from enum import StrEnum
 from uuid import UUID, uuid4
 
 from contract_review.domain import ApprovalAttachment, ApprovalTask, InMemoryReviewStore, TaskLog, TaskStatus
-from contract_review.rules import RuleHit, RuleHitResult
+from contract_review.engine.rules.engine import RuleHit, RuleHitResult
 
 
 class Recommendation(StrEnum):

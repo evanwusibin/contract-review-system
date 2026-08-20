@@ -4,8 +4,8 @@ from uuid import uuid4
 import pytest
 
 from contract_review.domain import ApprovalAttachment, ApprovalTask, InMemoryReviewStore, QualityStatus, TaskStatus
-from contract_review.results import ConfirmationError, Recommendation, ResultStatus, ReviewResultService
-from contract_review.rules import RuleHit, RuleHitResult
+from contract_review.engine.workflow.results import ConfirmationError, Recommendation, ResultStatus, ReviewResultService
+from contract_review.engine.rules.engine import RuleHit, RuleHitResult
 
 
 def context():

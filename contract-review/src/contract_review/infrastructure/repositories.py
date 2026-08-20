@@ -6,9 +6,9 @@ from sqlalchemy.orm import Session
 
 from contract_review.domain import ApprovalAttachment, ApprovalTask, TaskLog
 from contract_review.infrastructure import models
-from contract_review.results import CommentLog, ReviewResult
-from contract_review.rules import RuleDefinition, RuleHit
-from contract_review.versions import ReviewVersion
+from contract_review.engine.workflow.results import CommentLog, ReviewResult
+from contract_review.engine.rules.engine import RuleDefinition, RuleHit
+from contract_review.engine.workflow.versions import ReviewVersion
 
 
 class SqlTaskRepository:
@@ -345,7 +345,7 @@ def _task_log_from_row(row: models.TaskLogModel) -> TaskLog:
 
 
 def _rule_from_row(row: models.ReviewRuleModel) -> RuleDefinition:
-    from contract_review.rules import RuleStatus
+    from contract_review.engine.rules.engine import RuleStatus
 
     return RuleDefinition(
         id=row.id, rule_code=row.rule_code, version=row.version, name=row.name,
@@ -356,7 +356,7 @@ def _rule_from_row(row: models.ReviewRuleModel) -> RuleDefinition:
 
 
 def _result_from_row(row: models.ReviewResultModel) -> ReviewResult:
-    from contract_review.results import Recommendation, ResultStatus
+    from contract_review.engine.workflow.results import Recommendation, ResultStatus
 
     return ReviewResult(
         id=row.id, task_id=row.task_id, attachment_id=row.attachment_id,
@@ -369,7 +369,7 @@ def _result_from_row(row: models.ReviewResultModel) -> ReviewResult:
 
 
 def _version_from_row(row: models.ReviewVersionModel) -> ReviewVersion:
-    from contract_review.results import Recommendation, ResultStatus
+    from contract_review.engine.workflow.results import Recommendation, ResultStatus
 
     return ReviewVersion(
         id=row.id, task_id=row.task_id, attachment_id=row.attachment_id,

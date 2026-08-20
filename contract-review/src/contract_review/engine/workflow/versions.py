@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
 from contract_review.domain import ApprovalTask, InMemoryReviewStore, TaskLog
-from contract_review.results import Recommendation, ResultStatus, ReviewResult
+from contract_review.engine.workflow.results import Recommendation, ResultStatus, ReviewResult
 
 
 class VersionSaveError(ValueError):

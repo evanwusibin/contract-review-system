@@ -14,10 +14,10 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import select
 
-from contract_review.database import get_sync_session_factory
-from contract_review.db import ReviewRule as ReviewRuleORM
-from contract_review.mappers import rule_to_domain, rule_to_orm
-from contract_review.rules import (
+from contract_review.infrastructure.persistence.database import get_sync_session_factory
+from contract_review.infrastructure.persistence.models import ReviewRule as ReviewRuleORM
+from contract_review.infrastructure.persistence.mappers import rule_to_domain, rule_to_orm
+from contract_review.engine.rules.engine import (
     RuleDefinition,
     RuleStatus,
     party_completeness_rule,

@@ -8,10 +8,10 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from contract_review.domain import ApprovalTask, InMemoryReviewStore, TaskStatus, WriteStatus
-from contract_review.mock_approvals import get_mock_approval, list_mock_approvals, mock_attachment_content
-from contract_review.parser import ContractParser, ParseStatus
-from contract_review.results import ReviewResult
-from contract_review.rules import RestrictedRuleEngine, RuleDefinition
+from contract_review.infrastructure.storage.mock import get_mock_approval, list_mock_approvals, mock_attachment_content
+from contract_review.engine.parser.service import ContractParser, ParseStatus
+from contract_review.engine.workflow.results import ReviewResult
+from contract_review.engine.rules.engine import RestrictedRuleEngine, RuleDefinition
 
 
 def list_pending_contract_approvals(store: InMemoryReviewStore, limit: int = 10) -> dict[str, Any]:
@@ -184,7 +184,7 @@ def save_review_result(store: InMemoryReviewStore, case_id: str, overall_risk_le
         raise ValueError(f"任务不存在: {case_id}")
     atts = store.list_attachments(tid)
     attachment_id = atts[-1].id if atts else tid
-    from contract_review.results import Recommendation, ResultStatus, ReviewResult
+    from contract_review.engine.workflow.results import Recommendation, ResultStatus, ReviewResult
     level = overall_risk_level if overall_risk_level in ("low", "medium", "high") else "medium"
     rec_map = {"low": Recommendation.PASS, "medium": Recommendation.MANUAL_REVIEW, "high": Recommendation.REJECT}
     result = ReviewResult(id=uuid4(), task_id=tid, attachment_id=attachment_id, recommendation=rec_map[level], status=ResultStatus.DRAFT, risk_summary={"overall": level}, review_comment=comment_text, required_roles=("business", "legal"), confirmed_roles=set(), created_by="system", confirmed_at=None, created_at=datetime.now(timezone.utc), updated_at=datetime.now(timezone.utc))
@@ -220,7 +220,7 @@ def write_approval_comment(store: InMemoryReviewStore, instance_id: str, review_
     task.write_status = WriteStatus.WRITING  # type: ignore[attr-defined]
     task.updated_at = datetime.now(timezone.utc)
     store.save_task(task)
-    from contract_review.results import CommentLog, ResultStatus
+    from contract_review.engine.workflow.results import CommentLog, ResultStatus
     write_status = WriteStatus.SUCCESS
     response_text = f"SIMULATED_ONLY: 已写回审批 {getattr(task, 'approval_code', task.external_task_key)} 评论区"
     task.write_status = write_status  # type: ignore[attr-defined]

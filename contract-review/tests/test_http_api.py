@@ -1,13 +1,13 @@
 from fastapi.testclient import TestClient
 
 from contract_review.domain import ContractImporter, InMemoryObjectStorage, InMemoryReviewStore
-from contract_review.ocr import OCRDocument, OCRPage, OCRPageQuality
-from contract_review.parser import ContractParser
-from contract_review.quality import QualityDiagnostic
-from contract_review.results import ReviewResultService
-from contract_review.rules import RestrictedRuleEngine
-from contract_review.versions import ReviewVersionService
-from contract_review.workflow import ContractReviewWorkflow, SimulatedApprovalGateway
+from contract_review.infrastructure.ocr.provider import OCRDocument, OCRPage, OCRPageQuality
+from contract_review.engine.parser.service import ContractParser
+from contract_review.engine.parser.quality import QualityDiagnostic
+from contract_review.engine.workflow.results import ReviewResultService
+from contract_review.engine.rules.engine import RestrictedRuleEngine
+from contract_review.engine.workflow.versions import ReviewVersionService
+from contract_review.engine.workflow.workflow import ContractReviewWorkflow, SimulatedApprovalGateway
 from contract_review.api import create_app
 
 

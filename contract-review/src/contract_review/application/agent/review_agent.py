@@ -7,8 +7,8 @@ from datetime import datetime, timezone
 from typing import Any
 
 from contract_review.domain import InMemoryReviewStore, TaskStatus, WriteStatus
-from contract_review.mock_approvals import mock_attachment_content
-from contract_review.tools import download_contract_attachment, get_contract_approval, parse_contract_document, run_contract_rules, save_review_result, write_approval_comment
+from contract_review.infrastructure.storage.mock import mock_attachment_content
+from contract_review.application.tools.contract_tools import download_contract_attachment, get_contract_approval, parse_contract_document, run_contract_rules, save_review_result, write_approval_comment
 
 
 @dataclass

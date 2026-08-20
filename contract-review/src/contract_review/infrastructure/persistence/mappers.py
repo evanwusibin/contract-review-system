@@ -17,18 +17,18 @@ from contract_review.domain import (
     TaskStatus,
     WriteStatus,
 )
-from contract_review.parser import (
+from contract_review.engine.parser.service import (
     ContractParse,
     ExtractedField,
     FieldEvidence,
     FieldStatus,
     ParseStatus,
 )
-from contract_review.results import CommentLog, Recommendation, ResultStatus, ReviewResult
-from contract_review.rules import RuleDefinition, RuleHit, RuleHitResult, RuleStatus
-from contract_review.versions import ReviewVersion
+from contract_review.engine.workflow.results import CommentLog, Recommendation, ResultStatus, ReviewResult
+from contract_review.engine.rules.engine import RuleDefinition, RuleHit, RuleHitResult, RuleStatus
+from contract_review.engine.workflow.versions import ReviewVersion
 
-from contract_review.db import (
+from contract_review.infrastructure.persistence.models import (
     ApprovalAttachment as ApprovalAttachmentORM,
     ApprovalTask as ApprovalTaskORM,
     CommentLog as CommentLogORM,

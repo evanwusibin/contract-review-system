@@ -5,9 +5,9 @@ from contract_review.domain import (
     ApprovalTask,
     TaskLog,
 )
-from contract_review.results import CommentLog, ReviewResult
-from contract_review.rules import RuleDefinition, RuleHit
-from contract_review.versions import ReviewVersion
+from contract_review.engine.workflow.results import CommentLog, ReviewResult
+from contract_review.engine.rules.engine import RuleDefinition, RuleHit
+from contract_review.engine.workflow.versions import ReviewVersion
 
 
 class TaskRepository(Protocol):

@@ -3,8 +3,8 @@ from uuid import uuid4
 
 import pytest
 
-from contract_review.parser import ContractParse, ExtractedField, FieldEvidence, FieldStatus, ParseStatus
-from contract_review.rules import (
+from contract_review.engine.parser.service import ContractParse, ExtractedField, FieldEvidence, FieldStatus, ParseStatus
+from contract_review.engine.rules.engine import (
     RestrictedRuleEngine,
     RuleDefinition,
     RuleExpressionError,

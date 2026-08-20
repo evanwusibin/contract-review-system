@@ -3,7 +3,7 @@ import json
 from fastapi.testclient import TestClient
 
 from contract_review.domain import InMemoryObjectStorage
-from contract_review.ocr import OCRDocument, OCRPage, OCRPageQuality
+from contract_review.infrastructure.ocr.provider import OCRDocument, OCRPage, OCRPageQuality
 from contract_review.api import create_app
 
 

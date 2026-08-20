@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from contract_review.config import MinioSettings
+from contract_review.common.config import MinioSettings
 from contract_review.domain import InMemoryObjectStorage
 
 

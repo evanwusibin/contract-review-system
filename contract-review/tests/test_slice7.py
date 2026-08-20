@@ -4,13 +4,13 @@ from uuid import uuid4
 import pytest
 
 from contract_review.domain import ContractImporter, ImportRequest, InMemoryObjectStorage, InMemoryReviewStore, TaskStatus
-from contract_review.ocr import OCRDocument, OCRPage, OCRPageQuality
-from contract_review.parser import ContractParser
-from contract_review.quality import QualityDiagnostic
-from contract_review.results import ReviewResultService, ResultStatus
-from contract_review.rules import RestrictedRuleEngine, party_completeness_rule
-from contract_review.versions import ReviewVersionService
-from contract_review.workflow import ContractReviewWorkflow, SimulatedApprovalGateway, WorkflowError
+from contract_review.infrastructure.ocr.provider import OCRDocument, OCRPage, OCRPageQuality
+from contract_review.engine.parser.service import ContractParser
+from contract_review.engine.parser.quality import QualityDiagnostic
+from contract_review.engine.workflow.results import ReviewResultService, ResultStatus
+from contract_review.engine.rules.engine import RestrictedRuleEngine, party_completeness_rule
+from contract_review.engine.workflow.versions import ReviewVersionService
+from contract_review.engine.workflow.workflow import ContractReviewWorkflow, SimulatedApprovalGateway, WorkflowError
 
 
 class GoldenOCR:

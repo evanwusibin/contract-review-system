@@ -15,7 +15,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from contract_review.db import Base
+from contract_review.infrastructure.persistence.models import Base
 
 
 def get_database_url(*, async_mode: bool = True) -> str:

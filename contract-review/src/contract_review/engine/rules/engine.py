@@ -4,7 +4,7 @@ from enum import StrEnum
 from uuid import UUID, uuid4
 
 from contract_review.domain import TaskLog
-from contract_review.parser import ContractParse, ExtractedField, FieldEvidence, FieldStatus
+from contract_review.engine.parser.service import ContractParse, ExtractedField, FieldEvidence, FieldStatus
 
 # 稳定规则 ID：让 review_rules 种子幂等、rule_hits.rule_id 可追溯。
 RULE_ID_PARTY_001 = UUID("a1b2c3d4-0000-4000-8000-000000000001")

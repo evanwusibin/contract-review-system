@@ -1,6 +1,6 @@
 from contract_review.domain import ContractImporter, ImportRequest, InMemoryObjectStorage, InMemoryReviewStore, TaskStatus
-from contract_review.ocr import OCRDocument, OCRPage, OCRProviderError
-from contract_review.parser import ContractParser, FieldStatus, ParseStatus
+from contract_review.infrastructure.ocr.provider import OCRDocument, OCRPage, OCRProviderError
+from contract_review.engine.parser.service import ContractParser, FieldStatus, ParseStatus
 
 
 class FixedProvider:

@@ -1,7 +1,7 @@
 from contract_review.domain import ImportRequest, InMemoryObjectStorage, InMemoryReviewStore, QualityStatus, TaskStatus
-from contract_review.ocr import MockOCRProvider, OCRPageQuality, OCRProviderError, UnlimitedOCRProvider, UnlimitedOCRSettings
-from contract_review.quality import QualityDiagnostic
-from contract_review.storage import MinioSettings
+from contract_review.infrastructure.ocr.provider import MockOCRProvider, OCRPageQuality, OCRProviderError, UnlimitedOCRProvider, UnlimitedOCRSettings
+from contract_review.engine.parser.quality import QualityDiagnostic
+from contract_review.infrastructure.storage.object_store import MinioSettings
 from contract_review.domain import ContractImporter
 
 

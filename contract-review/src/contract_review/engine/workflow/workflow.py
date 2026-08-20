@@ -3,11 +3,11 @@ from hashlib import sha256
 from typing import Protocol
 
 from contract_review.domain import ContractImporter, ImportRequest, QualityStatus, TaskStatus
-from contract_review.parser import ContractParse, ContractParser, ParseStatus
-from contract_review.quality import QualityDiagnostic
-from contract_review.results import ReviewResult, ReviewResultService
-from contract_review.rules import RuleDefinition, RestrictedRuleEngine
-from contract_review.versions import ReviewVersion, ReviewVersionService
+from contract_review.engine.parser.service import ContractParse, ContractParser, ParseStatus
+from contract_review.engine.parser.quality import QualityDiagnostic
+from contract_review.engine.workflow.results import ReviewResult, ReviewResultService
+from contract_review.engine.rules.engine import RuleDefinition, RestrictedRuleEngine
+from contract_review.engine.workflow.versions import ReviewVersion, ReviewVersionService
 
 
 class WorkflowError(RuntimeError):

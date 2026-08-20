@@ -3,8 +3,8 @@ import json
 from fastapi.testclient import TestClient
 
 from contract_review.api import create_app
-from contract_review.ocr import OCRDocument, OCRPage, OCRPageQuality
-from contract_review.storage import create_memory_storage
+from contract_review.infrastructure.ocr.provider import OCRDocument, OCRPage, OCRPageQuality
+from contract_review.infrastructure.storage.object_store import create_memory_storage
 
 
 class HTTPGoldenOCR:
