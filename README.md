@@ -1,11 +1,14 @@
 # 合同评审系统 · Contract Review System
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Build & Push Docker Image](https://github.com/evanwusibin/contract-review-system/actions/workflows/deploy.yml/badge.svg)](https://github.com/evanwusibin/contract-review-system/actions/workflows/deploy.yml)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue)](contract-review/pyproject.toml)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.141-green)](contract-review/src/contract_review/api)
 [![Vite 6](https://img.shields.io/badge/Vite-6-646cff)](frontend/package.json)
 
 AI 驱动的合同风险识别与审批工作台。基于原文证据、规则命中与人工会签，帮助法务和业务更快发现合同风险。
+
+![工作台](contract-review/docs/screenshots/workbench-final.jpeg)
 
 > **视觉基准**：`02_合同评审开发任务/合同评审工作台_阶段1原型.html`（渐变 `--grad`、`220px` 侧边栏、`64px` 品牌 + `AI 智能审查` 渐变徽标、欢迎页静态、登录轮播）
 
